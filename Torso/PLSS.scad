@@ -57,7 +57,7 @@ echo(seg_hgth*pack_hgth + (1-seg_hgth)*pack_hgth+(corn_rad-5)*sin(45)+15/sin(45)
 //show_segments = [1,1,1,1,1,1,1,1,1,1,1,1,1,1];
 //show_segments = [1,0,1,0,1,0,1,0,1,0,1,0,1,0];
 //show_segments = [0,0,0,0,0,0,0,0,0,0,0,0,0,1];
-show_segments = [0,0,0,0,0,0,0,0,0,0,0,0,1,0];
+show_segments = [0,0,1,0,0,0,0,0,0,0,0,0,0,0];
 
 translate([0,-100,-150]) rotate([90,0,0]) difference() {
     union() {
@@ -93,14 +93,22 @@ translate([0,-100,-150]) rotate([90,0,0]) difference() {
     flange_screw_segment();
     
     rotate([-90,0,0]) translate([0,100,150]) torso_stud_cos();
-    
-    
 }
 
 
 
 module plss_torso_stud_location() {
     for(ix=[-75,75]) translate([ix,0,-250]) children();
+}
+module plss_torso_portcrn_location() {
+    for(ix=[-1,1]*(20+15)) for(iz=[-1,1]*15-[1,1]*60) translate([ix,0,iz]) {
+        rotate([0,(ix>0?90:0),0]) children();
+    }
+}
+module plss_torso_port_location() {
+    for(ix=[-20,20]) for(iz=[-60]) translate([ix,0,iz]) {
+        rotate([0,(ix>0?90:0),0]) children();
+    }
 }
 
 module plss_datum_from_torso() {
@@ -277,7 +285,7 @@ module flange_screw_segment() {
             flange_screws(-45,0);
             for(ix=[(pack_widh-corn_bev-corn_rad)/2/*,pack_widh-(corn_bev+corn_rad)/2*/]) {
                 translate([-(pack_widh-corn_rad)+40,7.5,-(scal_rad-scal_dep)]) {
-                    rotate([0,asin((ix-40)/(scal_rad+5))]) translate([0,0,scal_rad+5])flange_screw_co(0,0);
+                    rotate([0,asin((ix-40)/(scal_rad+5))]) translate([0,0,scal_rad+5])flange_screw_co(0,90);
                 }
             }
         }
@@ -338,6 +346,49 @@ module torso_stud_cos() {
             torso_plss_stud_plane() translate([-100,-200,-100]) cube([200,200-10-5/cos(45)-50+(50-ib),200]);
         }
     }
+    
+    
+    plss_torso_portcrn_location() {
+        rotate([90,0,0]) hull() cylinder_oh(3+0.2,200);
+    }
+        
+    for(ix=[-1,1]*(20+15)) for(iz=[-1,1]*15) translate([ix,0,0]) {
+        torso_plss_port_plane(false,iz) rotate([0,0,(ix>0?90:0)]) {
+            hull() for(ia=[0,1,2,3,4,5]*60) rotate([0,0,ia]) translate([5/cos(30),0,10]) rotate([0,0,-ia]) {
+                translate([0,0,0.2]) cylinder_oh(0.2,200);
+                cylinder_oh(0.01,200);
+            }
+            translate([0,0,10+5]) hull() {
+                cylinder_oh(5/cos(30)+0.2,200);
+                translate([0,0,0.5]) cylinder_oh(5/cos(30)+0.2+0.5,200);
+            }
+        }
+    }
+    
+    for(ix=[-1,1]*(20+15)) for(iz=[-1,1]*15-[1,1]*60) hull() {
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) rotate([0,0,(ix>0?90:0)]) cylinder_oh(3+0.2,200);
+            torso_plss_port_plane() translate([0,0,-100+0.5]) cylinder(r=150,h=100);
+        }
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) rotate([0,0,(ix>0?90:0)]) cylinder_oh(3+0.2+0.5,200);
+            torso_plss_port_plane() translate([0,0,-100]) cylinder(r=150,h=100);
+        }
+    }
+    
+    plss_torso_port_location() {
+        rotate([90,0,0]) hull() cylinder_oh(12.5,200);
+    }
+    for(ix=[-20,20]) for(iz=[-60]) hull() {
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) rotate([0,0,(ix>0?90:0)]) cylinder_oh(12.5,200);
+            torso_plss_port_plane() translate([0,0,-100+0.5]) cylinder(r=150,h=100);
+        }
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) rotate([0,0,(ix>0?90:0)]) cylinder_oh(12.5+0.5,200);
+            torso_plss_port_plane() translate([0,0,-100]) cylinder(r=150,h=100);
+        }
+    }
 }
 
 
@@ -351,23 +402,12 @@ module plss_torso_studs() {
         }
     }
     
-    
-    hull() {
-        for(ix=[-25,25]) for(iz=[-50,-75]) translate([ix,-100-(scal_dep-10),iz]) {
-            rotate([90,0,0]) cylinder(r1=10+10,r2=10+10+50,h=50);
+
+    hull() for(ia=[0:7.5:45]) {
+        intersection() {
+            plss_torso_portcrn_location() rotate([90,0,0]) cylinder(r=7.5+5*sin(ia)+(ia==45?50:0),h=200);
+            torso_plss_port_plane() translate([0,0,+(5-5*cos(ia)+(ia==45?50:0))]) cylinder(r=150,h=100);
         }
-        /*difference() {
-            for(ix=[-25,25]) for(iz=[-50,-75]) translate([ix,0,iz]) {
-                rotate([90,0,0]) cylinder(r=10,h=100+100);
-            }
-            translate([0,(back_rad-back_dep),-back_hgt]) rotate([acos((back_hgt-67.5)/(back_rad+outset)),0,0]) cylinder(r=150,h=back_rad+outset+10);
-        }
-        difference() {
-            for(ix=[-25,25]) for(iz=[-50,-75]) translate([ix,0,iz]) {
-                rotate([90,0,0]) cylinder(r=10+75,h=100+100);
-            }
-            translate([0,(back_rad-back_dep)-75,-back_hgt]) rotate([acos((back_hgt-67.5)/(back_rad+outset)),0,0]) cylinder(r=200,h=back_rad+outset+10);
-        }*/
     }
 }
 

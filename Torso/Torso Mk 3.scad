@@ -54,7 +54,7 @@ bev_s = 0.5; //bevel
 
 *back_upper();
 *back_mid();
-back_lower();
+*back_lower();
 *chest_plate();
 
 //printable
@@ -80,26 +80,99 @@ module torso_plss_stud_plane(inc_rot=true) {
     translate([0,-(back_dep-5),0]) rotate([(inc_rot?1:0)*15,0,0]) children();
 }
 
+module torso_plss_port_plane(inc_rot=true,z_offset=0) {
+    //crit_angle = 90 - (atan((back_hgt2-should_rad)/(back_rad-back_dep)) - asin(30/back_rad) + acos(back_rad/(back_rad+5))); //this is the angle of the flat section of the back (from the -y axis)
+    
+    //plane_angle = min(crit_angle, asin((back_hgt-60)/(back_rad+outset)));
+    plane_angle = asin((back_hgt-strap_wid*sin(25)-60+z_offset)/(back_rad+outset+10));
+    
+    
+    plane_y = (back_rad-back_dep) - (back_rad+outset+10)*cos(plane_angle);
+    plane_z = -back_hgt + strap_wid*sin(25) + (back_rad+outset+10)*sin(plane_angle);
+    
+    translate([0,plane_y,plane_z]) {
+        rotate([90-(inc_rot?1:0)*plane_angle,0,0]) children();
+    }
+}
+
+module torso_plss_port_pos() {
+    intersection() {
+        hull() for(ia=[0:7.5:45]) {
+            intersection() {
+                plss_torso_portcrn_location() rotate([90,0,0]) cylinder(r=7.5+5*sin(ia)+(ia==45?50:0),h=200);
+                torso_plss_port_plane() translate([0,0,-100-(5-5*cos(ia)+(ia==45?50:0))]) cylinder(r=150,h=100);
+            }
+        }
+        
+        intersection_for(ix=[0,1]) mirror([ix,0,0]) translate([-120,0,0]) rotate([0,90-25,0]) {
+            translate([0,-200,strap_wid-20]) cube([200,200,200]);
+        }
+    }
+}
+
+module torso_plss_port_neg() {
+    plss_torso_portcrn_location() {
+        rotate([90,0,0]) hull() cylinder_oh(3+0.2,200);
+    }
+    
+    for(ix=[-1,1]*(20+15)) for(iz=[-1,1]*15) translate([ix,0,0]) {
+        torso_plss_port_plane(false,iz) translate([0,0,-100-5]) hull() {
+            cylinder_oh(3+0.2,100);
+            cylinder_oh(6+0.2,100-3);
+        }
+    }
+    
+    for(ix=[-1,1]*(20+15)) for(iz=[-1,1]*15-[1,1]*60) hull() {
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) cylinder_oh(3+0.2,200);
+            torso_plss_port_plane() translate([0,0,-0.5]) cylinder(r=150,h=100);
+        }
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) cylinder_oh(3+0.2+0.5,200);
+            torso_plss_port_plane() translate([0,0,0]) cylinder(r=150,h=100);
+        }
+    }
+    
+    plss_torso_port_location() {
+        rotate([90,0,0]) hull() cylinder_oh(12.5,200);
+    }
+    
+    for(ix=[-20,20]) for(iz=[-60]) hull() {
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) cylinder_oh(12.5,200);
+            torso_plss_port_plane() translate([0,0,-0.5]) cylinder(r=150,h=100);
+        }
+        intersection() {
+            translate([ix,0,iz]) rotate([90,0,0]) cylinder_oh(12.5+0.5,200);
+            torso_plss_port_plane() translate([0,0,0]) cylinder(r=150,h=100);
+        }
+    }
+    
+    hull() for(ib=[0,outset/2]) intersection() {
+        hull() plss_torso_portcrn_location() {
+            rotate([90,0,0]) hull() cylinder_oh(12.5+(outset/2-ib),200);
+        }
+        
+        union() {
+            translate([0,-((back_rad-back_dep)+outset),-back_hgt+(120-back_hgt2*sin(25))*tan(25)]) rotate([90,0,0]) rotate([0,0,90-25]) rotate_extrude(angle=2*25) intersection() {
+                rotate([0,0,180]) translate([-back_hgt2,(back_rad-back_dep)+outset]) back_upper_cs(ib); 
+                translate([0,-250]) square([500,500]);
+            }
+                
+            for(ix=[0,1]) mirror([ix,0,0]) translate([-120,0,0]) rotate([0,90-25,0]) {
+                translate([0,0,strap_wid-20-100]) linear_extrude(height=-(strap_wid-20-100-0.01)+(120-back_hgt2*sin(25))/cos(25)) back_upper_cs(ib);
+            }
+        }
+    }
+}
+
 
 module back_upper() intersection() {
     difference() {
         union() {
             difference() {
                 union() {
-                    hull() {
-                        intersection() {
-                            for(ix=[-25,25]) for(iz=[-50,-75]) translate([ix,0,iz]) {
-                                rotate([90,0,0]) cylinder(r=10,h=200);
-                            }
-                            translate([0,(back_rad-back_dep),-back_hgt]) rotate([acos((back_hgt-67.5)/(back_rad+outset)),0,0]) cylinder(r=150,h=back_rad+outset+10);
-                        }
-                        intersection() {
-                            for(ix=[-25,25]) for(iz=[-50,-75]) translate([ix,0,iz]) {
-                                rotate([90,0,0]) cylinder(r=10+50,h=200);
-                            }
-                            translate([0,(back_rad-back_dep),-back_hgt]) rotate([acos((back_hgt-67.5)/(back_rad+outset)),0,0]) cylinder(r=150,h=back_rad+outset+10-50);
-                        }
-                    }
+                    torso_plss_port_pos();
                     
                     translate([0,-((back_rad-back_dep)+outset),-back_hgt+(120-back_hgt2*sin(25))*tan(25)]) rotate([90,0,0]) rotate([0,0,90-25]) rotate_extrude(angle=2*25) intersection() {
                         rotate([0,0,180]) translate([-back_hgt2,(back_rad-back_dep)+outset]) back_upper_cs(outset); 
@@ -150,12 +223,7 @@ module back_upper() intersection() {
             translate([0,0,strap_wid-20-100]) linear_extrude(height=strap_wid-20+100) back_upper_cs(outset/2); 
         }
     
-        for(ix=[-25,25]) for(iz=[-50,-75]) translate([ix,0,iz]) {
-            rotate([90,0,0]) hull() cylinder_oh(3+0.2,200);
-        }
-        for(ix=[-25/2,25/2]) for(iz=[-50-12.5]) translate([ix,0,iz]) {
-            rotate([90,0,0]) hull() cylinder_oh(8.75,200);
-        }
+        torso_plss_port_neg();
         
         for(ix=[0,1]) mirror([ix,0,0])translate([-120,0,0]) rotate([0,90-25,0]) {
             translate([back_hgt2,(back_rad-back_dep),strap_wid-10]) {
@@ -172,9 +240,13 @@ module back_upper() intersection() {
     
     translate([0,-((back_rad-back_dep)+outset)+250,-back_hgt]) translate([-250,-(250+50),0]) cube([500,250+50,250]);
     
-    translate([0,-((back_rad-back_dep)+outset)+250,-back_hgt]) rotate([-asin(75/back_rad),0,0]) hull() {
+    /*translate([0,-((back_rad-back_dep)+outset)+250,-back_hgt]) rotate([-asin(75/back_rad),0,0]) hull() {
         translate([-140/2,-(250+50),-250]) cube([140,250+50,250]);
         translate([-140/2-50,-(250+50),-250]) cube([140+2*50,250+50,250-50]);
+    }*/
+    
+    translate([0,-((back_rad-back_dep)+outset)+250,-back_hgt]) rotate([-asin(75/back_rad),0,0]) hull() {
+        translate([-140/2-50,-(250+50),-250]) cube([140+2*50,250+50,250]);
     }
 }
 
@@ -182,6 +254,7 @@ module back_upper() intersection() {
 module back_upper_cs(outset=0) hull() {
     //outset = 0;
     *#translate([30,0]) circle(r=30+outset);
+    
     translate([back_hgt2,(back_rad-back_dep)]) {
         circle(r=back_rad+outset,$fn=$fn*4);
     
