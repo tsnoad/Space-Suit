@@ -57,7 +57,7 @@ echo(seg_hgth*pack_hgth + (1-seg_hgth)*pack_hgth+(corn_rad-5)*sin(45)+15/sin(45)
 //show_segments = [1,1,1,1,1,1,1,1,1,1,1,1,1,1];
 //show_segments = [1,0,1,0,1,0,1,0,1,0,1,0,1,0];
 //show_segments = [0,0,0,0,0,0,0,0,0,0,0,0,0,1];
-show_segments = [0,0,1,0,0,0,0,0,0,0,0,0,0,0];
+show_segments = [0,0,0,0,0,0,0,0,0,0,0,0,0,1];
 
 translate([0,-100,-150]) rotate([90,0,0]) difference() {
     union() {
@@ -192,7 +192,11 @@ module flange_segment_intersect(include_segs=[1,1,1,1,1,1,1,1,1,1,1,1,1,1]) diff
             
             if(include_segs[5+ia]) flange_int_shape([-(pack_widh-corn_rad),seg_hgth*(pack_hgth-corn_bev-corn_rad),0],180,pack_widh-corn_rad);
             
-            if(include_segs[6+ia]) flange_int_shape([-(pack_widh-corn_rad),-seg_hgth*(pack_hgth-corn_bev-corn_rad),0],180,pack_widh-corn_rad);
+            if(include_segs[6+ia]) {
+                flange_int_shape([-(pack_widh-corn_rad),-seg_hgth*(pack_hgth-corn_bev-corn_rad),0],180,pack_widh-corn_rad);
+                
+                flange_int_side_shape([0,seg_hgth*(pack_hgth-corn_bev-corn_rad),0],seg_hgth*(pack_hgth-corn_bev-corn_rad));
+            }
         }
         
         plss_shape_pos(-5+0.01);
@@ -250,6 +254,53 @@ module flange_int_shape(flange_cent=[0,0,0],flange_rot=0,flange_len=pack_widh-co
     }
 }
 
+
+module flange_int_side_shape(flange_cent=[0,0,0],flange_len) {
+    flange_x = [-5+5,15-5];
+    
+    intersection() {
+        translate(flange_cent) {
+            hull() for(ix=flange_x-[0,5]) for(iy=[0,-(flange_len-5-5)]) {
+                translate([ix,iy,0]) cylinder(r=5,h=50);
+            }
+            hull() for(ix=flange_x[1]*[1,1]-[0,5]) for(iy=[-(15-5),-15]) {
+                if(ix!=flange_x[1] || iy==-15)  translate([ix,iy,0]) cylinder(r=5,h=50);
+            }
+            hull() for(ix=flange_x) for(iy=[0,-(flange_len-5-5)]-[15,0]) {
+                translate([ix,iy,0]) cylinder(r=5,h=50);
+            }
+        }
+        plss_scal_co(-5-2.5);
+        translate(flange_cent+[-250,-500,0]) cube([500,500,500]);
+    }
+    
+        
+    hull() {
+        intersection() {
+            translate(flange_cent) {
+                hull() for(ix=flange_x[0]) {
+                    for(iy=[0,-(flange_len-5-5)]) translate([ix,iy,0]) {
+                        cylinder(r=5,h=50);
+                    }
+                }
+            }
+            plss_scal_co(-5-2.5);
+            translate(flange_cent+[-250,-500,0]) cube([500,500,500]);
+        }
+        intersection() {
+            translate(flange_cent) {
+                hull() for(ix=flange_x[0]) {
+                    for(iy=[0,-(flange_len-5-5)]) translate([ix,iy,0]) {
+                        if(ix==flange_x[0]) translate([-2.5/tan(45),0,0]) cylinder(r=5,h=50);
+                    }
+                }
+            }
+            plss_scal_co(-5);
+            translate(flange_cent+[-250,-500,0]) cube([500,500,500]);
+        }
+    }
+}
+
 module flange_screw_segment() {
     for(ia=[0,1]) rotate([0,0,ia*180]) {
         translate([(pack_widh-corn_rad),(pack_hgth-corn_bev-corn_rad),0]) rotate([0,0,45]) flange_screws(-45,0);
@@ -282,10 +333,18 @@ module flange_screw_segment() {
         }
         
         translate([-(pack_widh-corn_rad),-seg_hgth*(pack_hgth-corn_bev-corn_rad),0]) rotate([0,0,180]) {
-            flange_screws(-45,0);
+            flange_screws(0,0);
             for(ix=[(pack_widh-corn_bev-corn_rad)/2/*,pack_widh-(corn_bev+corn_rad)/2*/]) {
                 translate([-(pack_widh-corn_rad)+40,7.5,-(scal_rad-scal_dep)]) {
                     rotate([0,asin((ix-40)/(scal_rad+5))]) translate([0,0,scal_rad+5])flange_screw_co(0,90);
+                }
+            }
+        }
+        
+        translate([0,seg_hgth*(pack_hgth-corn_bev-corn_rad),0]) rotate([0,0,180]) {
+            for(iy=[25]) {
+                translate([-7.5,iy,-(scal_rad-scal_dep)]) {
+                    translate([0,0,scal_rad+5])flange_screw_co(0,0);
                 }
             }
         }
