@@ -98,7 +98,10 @@ limtab_widh = 3.14159*2*limtab_r/limtab_num/8;
 latch_prot_outer_r = lring_outer_r + 5;
 latch_piv_r = lug_outer_r+clr_h + (latch_prot_outer_r - (lug_outer_r+clr_h))/2;
 
-latch_tab_r = r_intrm1 - 2.5;
+//latch_tab_r = lug_outer_r+clr_h - (2.5-clr_h);
+latch_tab_r = lug_inner_r+clr_h + 2.4 + clr_h;
+
+latch_button_outer_r = latch_prot_outer_r + 5;
 
 latch_mid_r = 2*latch_piv_r*sin(30/2);
 latch_inner_r = latch_mid_r-5;
@@ -106,67 +109,75 @@ latch_outer_r = latch_mid_r+5;
 
 
 
-
-difference() {
-    translate([0,0,-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt]) {
-        *base_ring_bottom() {
-            for(ia=[0:120:360-120]) rotate([0,0,ia]) translate([lug_inner_r-(1.5+0.15),0,0]) {
-                translate([0,0,-0.01]) cylinder(r=(1.5+0.15),h=100);
-                translate([0,0,bring_btm_hgt-clr_v]) hull() {
-                    cylinder(r=(1.5+0.15),h=100);
-                    translate([50,0,0]) cylinder(r=(1.5+0.15),h=100);
-                }
-            }
-            for(ia=[60:120:60+360-120]) rotate([0,0,ia]) translate([passage_r+(limtab_r-passage_r)/2,0,0]) {
-                translate([0,0,-0.01]) cylinder(r=(1.5+0.15),h=100);
-            }
-        }
-        translate([0,0,bring_btm_hgt+lring_btm_hgt]) {
-            base_ring_top();
-           
-            *rotate_extrude() polygon([
-                [lug_inner_r-2.4-2/2-1.6/2,0],
-                [lug_inner_r-2.4-2/2-1.6/2,bring_top_hgt+oring_fol_hgt-bev_xs],
-                [lug_inner_r-2.4-2/2-1.6/2+bev_xs,bring_top_hgt+oring_fol_hgt],
-                [lug_inner_r-2.4-2/2+1.6/2-bev_xs,bring_top_hgt+oring_fol_hgt],
-                [lug_inner_r-2.4-2/2+1.6/2,bring_top_hgt+oring_fol_hgt-bev_xs],
-                [lug_inner_r-2.4-2/2+1.6/2,bring_top_hgt+bev_xs],
-                [lug_inner_r-2.4-2/2+1.6/2+bev_xs,bring_top_hgt],
-                [lug_inner_r-2.4-2/2+1.6/2+bev_xs,0],
-            ]);
-            
-            latch();
-        }
-        rotate([0,0,0]) {
-            translate([0,0,bring_btm_hgt]) locking_ring_bottom() {
-                for(ia=[60:60:360-60]) rotate([0,0,ia]) translate([lug_outer_r+clr_h+(1.5+0.15),0,0]) {
-                    translate([0,0,-0.01]) cylinder(r=(1.5+0.15),h=100);
-                    translate([0,0,-0.01]) hull() {
-                        cylinder(r=3,h=0.01);
-                        cylinder(r=0.01,h=3);
-                    }
-                    translate([0,0,lring_btm_hgt-clr_v]) hull() {
-                        cylinder(r=(1.5+0.15),h=100);
-                        translate([-50,0,0]) cylinder(r=(1.5+0.15),h=100);
-                    }
-                }
-                for(ia=[0]) rotate([0,0,ia]) translate([lring_outer_r,0,0]) {
-                    translate([0,0,-0.01]) cylinder(r=(1.5+0.15),h=100);
-                }
-            }
-            *translate([0,0,bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) locking_ring_top();
+translate([0,0,25+5]) difference() {
+    translate([0,0,/*-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt*/]) {
+        sleeve_base_ring_bottom();
+        
+        *translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_base_ring_top();
+        
+        rotate([0,0,30*0]) {
+            translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_latch();
+        
+            translate([0,0,bring_btm_hgt]) sleeve_locking_ring_bottom();
+            translate([0,0,bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) sleeve_locking_ring_top();
         }
     }
     *translate([0,0,-50]) cube([200,200,200]);
 }
 
 
-*translate([0,0,0*103+10]) { 
-import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Gloves/MA-3 Glove C.stl");
-import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Gloves/MA-3 Glove D.stl");
-*import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Gloves/MA-3 Glove E.stl");
-import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Gloves/MA-3 Glove F.stl");
+module sleeve_base_ring_bottom() {
+    base_ring_bottom() {
+        hgt1 = bring_btm_hgt-clr_v;
+        hgt2 = bring_btm_hgt+lring_btm_hgt;
+
+        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
+            cylinder_neg_bev(1.5+0.15,hgt2,bev_xs,bev_xs);
+            
+            if (ia%120!=0) {
+                translate([0,0,hgt1]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,10]);
+                
+            translate([0,(1.5+0.15),hgt1]) for(ia=[-1,1]*45) rotate([0,0,ia+180]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
+            }
+        }
+    }
 }
+
+module sleeve_base_ring_top() {
+    base_ring_top() {
+        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
+            cylinder_bev(1.25,bring_top_hgt-0.6,0,0.25);
+            cylinder_bev(1.25+bev_xs,0.01+bev_xs,0,bev_xs);
+        }
+    }
+}
+
+module sleeve_latch() {
+    rotate([0,0,-30]) latch();
+}
+
+module sleeve_locking_ring_bottom() {
+    locking_ring_bottom() {
+        hgt1 = lring_btm_hgt-clr_v;
+        hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
+
+        for(ia=[0,1,2,3,5]*60) rotate([0,0,ia]) translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
+            cylinder_neg_bev(1.5+0.15,hgt2,(3-(1.5+0.15)),0);
+            translate([0,0,hgt1]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
+            translate([0,-(1.5+0.15),hgt1]) for(ia=[-1,1]*45) rotate([0,0,ia]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
+        }
+    }
+}
+
+module sleeve_locking_ring_top() {
+    locking_ring_top() {
+        for(ia=[0,1,2,3,5]*60) rotate([0,0,ia]) translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
+            cylinder_bev(1.25,lring_top_hgt-0.6,0,0.25);
+            cylinder_bev(1.25+bev_xs,0.01+bev_xs,0,bev_xs);
+        }
+    }
+}
+
 
 
 include <../Modular Locking Ring.scad>;

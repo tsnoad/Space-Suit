@@ -203,7 +203,10 @@ module locking_ring_top() union() {
     hgt1 = lring_top_hgt-clr_v;
     
     difference() {
-        cylinder_bev(r_outer,hgt1,bev_xs,bev_l);
+        union() {
+            cylinder_bev(r_outer,hgt1,bev_xs,bev_l);
+            rotate([0,0,-30]) locking_ring_latch_prot(hgt1,bev_xs,bev_l);
+        }
             
         intersection() {
             union() {
@@ -235,6 +238,15 @@ module locking_ring_top() union() {
         cylinder_neg_bev(r_inner,hgt1,bev_s,bev_s);
         
         children();
+        
+        rotate([0,0,-30]) latch_datum_from_origin() {
+            cylinder_neg_bev(1.5+0.15,hgt1-2,bev_xs,bev_xs);
+            
+            translate([0,0,hgt1-2+bev_s]) for(ia=[0,45]) rotate([0,0,-90+ia]) cylinder_neg_bev(4,2-bev_s,0,bev_s,[0,10]);
+            
+            translate([0,0,hgt1-2]) hull() for(ia=[0,45]) rotate([0,0,-90+ia]) for(iy=[0,10]) translate([0,iy,0]) cylinder_bev(4,50,bev_s,0);
+        }
+        
         
         /*locking_ring_screws() {
             translate([0,0,-1]) cylinder(r=1.75,h=50);
@@ -278,8 +290,8 @@ module locking_ring_bottom() union() {
     
     difference() {
         union() {
-            cylinder_bev(r_outer,hgt2,bev_l,bev_xs);
-            locking_ring_bottom_latch_prot_pos();
+            cylinder_bev(r_outer,hgt2,bev_l,bev_xs,$fn=$fn*2);
+            rotate([0,0,-30]) locking_ring_bottom_latch_prot_pos();
         }
         
         rotate([0,0,-limtab_a_offs-limtab_a_trav/2]) intersection() {
@@ -309,7 +321,7 @@ module locking_ring_bottom() union() {
                 }
             }
             
-            cylinder_neg_bev(r_intrm2+clr_h,hgt1,bev_s,bev_s);
+            rotate([0,0,-30]) cylinder_neg_bev(r_intrm2+clr_h,hgt1,bev_s,bev_s);
         }
         
         
@@ -317,7 +329,7 @@ module locking_ring_bottom() union() {
         translate([0,0,hgt2-bev_xs]) cylinder_bev(r_intrm1+bev_xs,50,bev_xs,0);
         cylinder_neg_bev(r_inner,hgt1,bev_s,bev_s);
         
-        locking_ring_bottom_latch_prot_neg(hgt1,r_intrm1);
+        rotate([0,0,-30]) locking_ring_bottom_latch_prot_neg();
         
         children();
         
@@ -341,7 +353,7 @@ module locking_ring_bottom() union() {
         }*/
     }
     
-    locking_ring_bottom_latch_prot_pos2();
+    rotate([0,0,-30]) locking_ring_bottom_latch_prot_pos2();
         
     rotate([0,0,-limtab_a_offs-limtab_a_trav/2]) {
         for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num]) {
@@ -354,25 +366,53 @@ module locking_ring_bottom() union() {
     }
 }
 
-module locking_ring_bottom_latch_prot_pos() {
-    hgt1 = lring_btm_hgt-clr_v;
-    hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
-    
+module locking_ring_latch_prot(hgt,bev_btm,bev_top) {
     intersection() {
-        cylinder_bev(latch_prot_outer_r,hgt2,bev_l,bev_xs);
+        cylinder_bev(latch_prot_outer_r,hgt,bev_btm,bev_top,$fn=$fn*2);
         rotate_extrude(angle=-30-2*asin(((5+clr_h)/2)/lring_outer_r)) square([100,50]);
     }
     
     for(ia=[-30-2*asin(((5+clr_h)/2)/lring_outer_r),0]) rotate([0,0,ia]) mirror([0,(ia<0?0:1),0]) {
-        rotate([0,0,-7.5]) round_step_on_rad(lring_outer_r,latch_prot_outer_r,7.5,2,5,hgt2,bev_l,bev_xs);
+        rotate([0,0,-7.5]) round_step_on_rad(lring_outer_r,latch_prot_outer_r,7.5,2,5,hgt,bev_btm,bev_top);
     }
 }
 
-module locking_ring_bottom_latch_prot_neg(hgt1,r_intrm1) {
+module locking_ring_bottom_latch_prot_pos() {
+    hgt1 = lring_btm_hgt-clr_v;
+    hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
+    
+    locking_ring_latch_prot(hgt1,bev_l,bev_xs);
+    
+    difference() {
+        locking_ring_latch_prot(hgt2,bev_l,bev_xs);
+        
+        translate([latch_piv_r,0,hgt1-bev_s]) cylinder_bev(latch_outer_r+clr_h,50,2*bev_s,0,$fn=$fn*2);
+    }
+}
+
+module locking_ring_bottom_latch_prot_neg() {
     hgt1 = lring_btm_hgt-clr_v;
     hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
     
     r_intrm1 = lug_outer_r+clr_h;
+    
+    
+    crn_r_xs = 0.5;
+    crn_r_s = 1;
+    
+    translate([latch_piv_r,0,0]) {
+        cylinder_neg_bev(1.5+0.15,hgt1,0,bev_xs);
+        
+        hull() for(i=[0:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-0.01]) {
+            cylinder_bev(0.2,hgt1-1.6,0,0);
+        }
+        hull() for(i=[0:2:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-0.01]) {
+            cylinder_bev(0.2,hgt1-1.6+0.2,0,0);
+        }
+        hull() for(i=[0:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-0.01]) {
+            cylinder_neg_bev(0.2,0.2+0.01,0.2,0);
+        }
+    }
     
     intersection() {
         union() {
@@ -400,149 +440,241 @@ module locking_ring_bottom_latch_prot_neg(hgt1,r_intrm1) {
                 [0,200],
             ]);
         }
+    }
+    
+    rotate([0,0,7.5]) {
+        $fn=$fn*2;
+        translate([lring_outer_r+2,0,0]) cylinder_neg_bev(2,hgt1,0,bev_xs);
+        rotate_extrude(angle=-7.5+angle_cntr(lring_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) polygon([
+            [200,0],
+            [lring_outer_r,0],
+            [lring_outer_r,hgt1-bev_xs],
+            [lring_outer_r-bev_xs,hgt1],
+            [lring_outer_r-bev_xs,200],
+            [200,200],
+        ]);
+    }
+    
+    translate([0,0,hgt1]) linear_extrude(height=50) {
+        latch_corner_diamond(r_intrm1+crn_r_xs,latch_outer_r+clr_h+crn_r_xs,-2,-2);
+        latch_corner_diamond(lring_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs,2,-2);
+        
+        mirror([0,1,0]) {
+            latch_corner_diamond(r_intrm1+crn_r_xs,latch_inner_r+clr_h+crn_r_xs,-2,-2);
+            latch_corner_diamond(r_intrm1+2.5-crn_r_xs,latch_inner_r+clr_h+crn_r_xs,2,-2);
             
-            
-        union() {
-            cube([200,200,200]);
-            translate([latch_piv_r,0,0]) rotate_extrude(angle=-180) square([latch_outer_r+clr_h-1,50]);
-            intersection() {
-                translate([latch_piv_r,0,0]) rotate_extrude(angle=-180) square([latch_outer_r+clr_h+1,50]);
-                rotate_extrude() translate([lug_outer_r+clr_h+2.5+1,0]) square([200,50]);
-            }
+            latch_corner_diamond(latch_prot_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs,2,-2);
         }
     }
     
-    intersection() {
-        translate([latch_piv_r,0,hgt1]) rotate_extrude(angle=180) square([latch_outer_r+clr_h+1,50]);
-        translate([0,0,hgt1]) rotate_extrude()  {
-            square([lug_outer_r+clr_h+1,50]);
-            translate([lring_outer_r-1,0]) square([50,50]);
-        }
-    }
-    intersection() {
-        translate([latch_piv_r,0,hgt1]) rotate_extrude(angle=-180) square([latch_inner_r+clr_h+1,50]);
-        translate([0,0,hgt1]) rotate_extrude()  {
-            square([lug_outer_r+clr_h+1,50]);
-            translate([lug_outer_r+clr_h+2.5-1,0]) square([50,50]);
-        }
-    }
-    intersection() {
-        translate([latch_piv_r,0,hgt1]) rotate_extrude(angle=-180) square([latch_outer_r+clr_h+1,50]);
-        translate([0,0,hgt1]) rotate_extrude()  {
-            translate([latch_prot_outer_r-1,0]) square([50,50]);
-        }
-    }
+    rotate_extrude(angle=-angle_cntr(latch_prot_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs),$fn=$fn*2) polygon([
+        [200,0],
+        [latch_prot_outer_r,0],
+        [latch_prot_outer_r,hgt1-bev_xs],
+        [latch_prot_outer_r-bev_xs,hgt1],
+        [latch_prot_outer_r-bev_xs,200],
+        [200,200],
+    ]);
 }
 
 module locking_ring_bottom_latch_prot_pos2() {
     hgt1 = lring_btm_hgt-clr_v;
     hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
+    
+    r_intrm1 = lug_outer_r+clr_h;
     r_outer = lring_outer_r;
+    
+    
+    crn_r_xs = 0.5;
+    crn_r_s = 1;
     
     intersection() {
         union() {
-            for(ix=[lug_outer_r+clr_h+1,lring_outer_r-1]) {
-                rotate([0,0,acos((pow(ix,2)+pow(latch_piv_r,2)-pow(latch_outer_r+clr_h+1,2))/(2*ix*latch_piv_r))]) {
-                    translate([ix,0,0]) {
-                        cylinder_bev(1+bev_s,hgt1+bev_s,0,bev_s);
-                        cylinder_bev(1,hgt2,0,bev_xs);
-                    }
-                }
+            translate(latch_corner_loc(r_intrm1+crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) {
+                cylinder_bev(crn_r_xs,hgt2,0,bev_xs);
+                cylinder_bev(crn_r_xs+bev_s,hgt1+bev_s,0,bev_s);
+            }
+            translate(latch_corner_loc(lring_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) {
+                cylinder_bev(crn_r_xs,hgt2,0,bev_xs);
+                cylinder_bev(crn_r_xs+bev_s+bev_xs,hgt1+bev_s,0,bev_s+bev_xs);
             }
             
-            for(ix=[lug_outer_r+clr_h+1,lug_outer_r+clr_h+2.5-1]) {
-                rotate([0,0,-acos((pow(ix,2)+pow(latch_piv_r,2)-pow(latch_inner_r+clr_h+1,2))/(2*ix*latch_piv_r))]) {
-                    translate([ix,0,0]) {
-                        cylinder_bev(1+bev_s,hgt1+bev_s,0,bev_s);
-                        cylinder_bev(1,hgt2,0,bev_xs);
-                    }
+            mirror([0,1,0]) {
+                translate(latch_corner_loc(r_intrm1+crn_r_xs,latch_inner_r+clr_h+crn_r_xs)) {
+                    cylinder_bev(crn_r_xs,hgt2,0,bev_xs);
+                    cylinder_bev(crn_r_xs+bev_s,hgt1+bev_s,0,bev_s);
                 }
-            }
-            
-            for(ix=[latch_prot_outer_r-1]) {
-                rotate([0,0,-acos((pow(ix,2)+pow(latch_piv_r,2)-pow(latch_outer_r+clr_h+1,2))/(2*ix*latch_piv_r))]) {
-                    translate([ix,0,0]) {
-                        cylinder_bev(1+bev_s,hgt1+bev_s,0,bev_s);
-                        cylinder_bev(1,hgt2,0,bev_xs);
+                translate(latch_corner_loc(r_intrm1+2.5-crn_r_xs,latch_inner_r+clr_h+crn_r_xs)) {
+                    cylinder_bev(crn_r_xs,hgt2,0,bev_xs);
+                    cylinder_bev(crn_r_xs+bev_s,hgt1+bev_s,0,bev_s);
+                }
+                translate(latch_corner_loc(latch_prot_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) {
+                    cylinder_bev(crn_r_xs,hgt2,0,bev_xs);
+                    cylinder_bev(crn_r_xs+bev_s+bev_xs,hgt1+bev_s,0,bev_s+bev_xs);
+                }
+                
+                difference() {
+                    linear_extrude(height=hgt2) {
+                        latch_corner_diamond(r_intrm1+2.5+clr_h+crn_r_xs,latch_outer_r+clr_h-(crn_r_xs+clr_h),-2.5,5);
+                    }
+                    
+                    translate([0,0,hgt1]) translate(latch_corner_loc(r_intrm1+2.5+clr_h+crn_r_xs,latch_outer_r+clr_h-(crn_r_xs+clr_h))) {
+                        cylinder_bev(crn_r_xs+clr_h,hgt2-hgt1,bev_s,0);
+                        translate([0,0,bev_s]) cylinder_neg_bev(crn_r_xs+clr_h,hgt2-hgt1-bev_s,0,bev_xs);
                     }
                 }
             }
         }
+        cylinder_bev(latch_prot_outer_r,hgt2,bev_l,0,$fn=$fn*2);
         union() {
-            cylinder_bev(r_outer,hgt2,bev_l,bev_xs);
-            locking_ring_bottom_latch_prot_pos();
+            translate([0,-200,0]) cube([200,200,200]);
+            cylinder_bev(lring_outer_r,hgt2,bev_l,0,$fn=$fn*2);
         }
     }
 }
 
-module base_ring_top() difference() {
+module base_ring_top() {
     hgt1 = bring_top_hgt;
     hgt2 = bring_top_hgt + lug_hgt;
     
-    union() {
-        hull() {
-            cylinder(r=lug_outer_r-bev_s,h=hgt1,$fn=$fn*2);
-            translate([0,0,bev_s]) cylinder(r=lug_outer_r,h=hgt1-2*bev_s,$fn=$fn*2);
-        }
-        
-        intersection() {
-            union() {
-                linear_extrude(height=hgt2,convexity=10) {
+    difference() {
+        union() {
+            hull() {
+                cylinder(r=lug_outer_r-bev_s,h=hgt1,$fn=$fn*2);
+                translate([0,0,bev_s]) cylinder(r=lug_outer_r,h=hgt1-2*bev_s,$fn=$fn*2);
+            }
+            
+            intersection() {
+                union() {
+                    linear_extrude(height=hgt2,convexity=10) {
+                        for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
+                            for(j=[0,1]) mirror([j,0,0]) rotate([0,0,360/lug_num/2]) {
+                                polygon([
+                                    [0.01*tan(360/lug_num/2),0.01],
+                            
+                                    [200*tan(360/lug_num/2),200],
+                                    [200*tan(360/lug_num/4),200],
+                                    [lug_widh+crn_r,sqrt(pow(lug_outer_r-crn_r+clr_h,2)-pow(lug_widh+crn_r,2))],
+                                    [lug_widh+crn_r,sqrt(pow(lug_inner_r+crn_r,2)-pow(lug_widh+crn_r,2))],
+                                ]);
+                            }
+                        }
+                    }
                     for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
                         for(j=[0,1]) mirror([j,0,0]) rotate([0,0,360/lug_num/2]) {
-                            polygon([
-                                [0.01*tan(360/lug_num/2),0.01],
-                        
-                                [200*tan(360/lug_num/2),200],
-                                [200*tan(360/lug_num/4),200],
-                                [lug_widh+crn_r,sqrt(pow(lug_outer_r-crn_r+clr_h,2)-pow(lug_widh+crn_r,2))],
-                                [lug_widh+crn_r,sqrt(pow(lug_inner_r+crn_r,2)-pow(lug_widh+crn_r,2))],
-                            ]);
-                        }
-                    }
-                }
-                for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
-                    for(j=[0,1]) mirror([j,0,0]) rotate([0,0,360/lug_num/2]) {
-                        hull() {
-                            translate([lug_widh+crn_r,sqrt(pow(lug_outer_r-crn_r+clr_h,2)-pow(lug_widh+crn_r,2)),0]) {
-                                cylinder(r=crn_r-clr_h,h=hgt2-bev_s);
-                                cylinder(r=crn_r-clr_h-bev_s,h=hgt2);
+                            hull() {
+                                translate([lug_widh+crn_r,sqrt(pow(lug_outer_r-crn_r+clr_h,2)-pow(lug_widh+crn_r,2)),0]) {
+                                    cylinder(r=crn_r-clr_h,h=hgt2-bev_s);
+                                    cylinder(r=crn_r-clr_h-bev_s,h=hgt2);
+                                }
+                                translate([lug_widh+crn_r,sqrt(pow(lug_inner_r+crn_r,2)-pow(lug_widh+crn_r,2)),0]) {
+                                    cylinder(r=crn_r-clr_h,h=hgt2-bev_s);
+                                    cylinder(r=crn_r-clr_h-bev_s,h=hgt2);
+                                }
                             }
-                            translate([lug_widh+crn_r,sqrt(pow(lug_inner_r+crn_r,2)-pow(lug_widh+crn_r,2)),0]) {
-                                cylinder(r=crn_r-clr_h,h=hgt2-bev_s);
-                                cylinder(r=crn_r-clr_h-bev_s,h=hgt2);
-                            }
-                        }
-                        hull() {
-                            translate([lug_widh+crn_r,sqrt(pow(lug_outer_r-crn_r+clr_h,2)-pow(lug_widh+crn_r,2)),-bev_s]) {
-                                cylinder(r=crn_r-clr_h,h=hgt1+2*bev_s);
-                                cylinder(r=crn_r-clr_h+2*bev_s,h=hgt1);
-                            }
-                            translate([lug_widh+crn_r,sqrt(pow(lug_inner_r+crn_r,2)-pow(lug_widh+crn_r,2)),-bev_s]) {
-                                cylinder(r=crn_r-clr_h,h=hgt1+2*bev_s);
-                                cylinder(r=crn_r-clr_h+2*bev_s,h=hgt1);
+                            hull() {
+                                translate([lug_widh+crn_r,sqrt(pow(lug_outer_r-crn_r+clr_h,2)-pow(lug_widh+crn_r,2)),-bev_s]) {
+                                    cylinder(r=crn_r-clr_h,h=hgt1+2*bev_s);
+                                    cylinder(r=crn_r-clr_h+2*bev_s,h=hgt1);
+                                }
+                                translate([lug_widh+crn_r,sqrt(pow(lug_inner_r+crn_r,2)-pow(lug_widh+crn_r,2)),-bev_s]) {
+                                    cylinder(r=crn_r-clr_h,h=hgt1+2*bev_s);
+                                    cylinder(r=crn_r-clr_h+2*bev_s,h=hgt1);
+                                }
                             }
                         }
                     }
                 }
-            }
-            hull() {
-                cylinder(r=lug_outer_r-bev_s,h=hgt2,$fn=$fn*2);
-                translate([0,0,bev_s]) cylinder(r=lug_outer_r,h=hgt2-2*bev_s,$fn=$fn*2);
+                hull() {
+                    cylinder(r=lug_outer_r-bev_s,h=hgt2,$fn=$fn*2);
+                    translate([0,0,bev_s]) cylinder(r=lug_outer_r,h=hgt2-2*bev_s,$fn=$fn*2);
+                }
             }
         }
+        
+        hull() {
+            translate([0,0,hgt1]) cylinder(r=lug_inner_r+clr_h-bev_s,h=50,$fn=$fn*2);
+            translate([0,0,hgt1+bev_s]) cylinder(r=lug_inner_r+clr_h,h=50,$fn=$fn*2);
+        }
+        translate([0,0,hgt2-bev_s]) cylinder(r1=lug_inner_r+clr_h,r2=lug_inner_r+clr_h+50,h=50,$fn=$fn*2);
+        
+        
+        cylinder_neg_bev(passage_r,hgt1,bev_xs,bev_l);
+        
+        children();
+        
+        base_ring_top_latch_neg();
+    }
+    base_ring_top_latch_pos();
+    
+    difference() {
+        rotate_extrude() polygon([
+            [lug_inner_r-2.4-2/2-1.6/2,0],
+            [lug_inner_r-2.4-2/2-1.6/2,bring_top_hgt+oring_fol_hgt-bev_xs],
+            [lug_inner_r-2.4-2/2-1.6/2+bev_xs,bring_top_hgt+oring_fol_hgt],
+            [lug_inner_r-2.4-2/2+1.6/2-bev_xs,bring_top_hgt+oring_fol_hgt],
+            [lug_inner_r-2.4-2/2+1.6/2,bring_top_hgt+oring_fol_hgt-bev_xs],
+            [lug_inner_r-2.4-2/2+1.6/2,bring_top_hgt+bev_xs],
+            [lug_inner_r-2.4-2/2+1.6/2+bev_xs,bring_top_hgt],
+            [lug_inner_r-2.4-2/2+1.6/2+bev_xs,0],
+        ]);
+        children();
+    }
+}
+
+
+module base_ring_top_latch_neg() {
+    hgt2 = bring_top_hgt + lug_hgt;
+    
+    crn_r_xs = 0.5;
+    
+    
+    intersection() {
+        translate([latch_piv_r,0,0]) rotate_extrude($fn=$fn*2) polygon([
+            [latch_inner_r-clr_h-bev_s,-0.01],
+            [latch_inner_r-clr_h,bev_s],
+            [latch_inner_r-clr_h,hgt2-bev_s],
+            [latch_inner_r-clr_h-bev_s,hgt2+0.01],
+            
+            [latch_outer_r+clr_h+bev_s,hgt2+0.01],
+            [latch_outer_r+clr_h,hgt2-bev_s],
+            [latch_outer_r+clr_h,bev_s],
+            [latch_outer_r+clr_h+bev_s,-0.01],
+        ]);
+        rotate_extrude(angle=90,$fn=$fn*4) polygon([
+            [latch_tab_r-clr_h-bev_s,-0.01],
+            [latch_tab_r-clr_h,bev_s],
+            [latch_tab_r-clr_h,hgt2-bev_s],
+            [latch_tab_r-clr_h-bev_s,hgt2+0.01],
+            
+            [50,hgt2+0.01],
+            [50,-0.01],
+        ]);
     }
     
-    hull() {
-        translate([0,0,hgt1]) cylinder(r=lug_inner_r+clr_h-bev_s,h=50,$fn=$fn*2);
-        translate([0,0,hgt1+bev_s]) cylinder(r=lug_inner_r+clr_h,h=50,$fn=$fn*2);
+    linear_extrude(height=50) {
+        latch_corner_diamond(lug_outer_r-crn_r_xs,latch_inner_r-clr_h-crn_r_xs,2,2);
+        latch_corner_diamond(lug_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs,2,-2);
     }
-    translate([0,0,hgt2-bev_s]) cylinder(r1=lug_inner_r+clr_h,r2=lug_inner_r+clr_h+50,h=50,$fn=$fn*2);
+}
+
+module base_ring_top_latch_pos() {
+    hgt2 = bring_top_hgt + lug_hgt;
     
+    crn_r_xs = 0.5;
     
-    cylinder_neg_bev(passage_r,hgt1,bev_xs,bev_l);
+    translate(latch_corner_loc(lug_outer_r-crn_r_xs,latch_inner_r-clr_h-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+    translate(latch_corner_loc(lug_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
     
-    children();
+    difference() {
+        linear_extrude(height=hgt2) {
+            latch_corner_diamond(latch_tab_r+crn_r_xs,latch_inner_r+crn_r_xs,-2.5,-6);
+            latch_corner_diamond(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs,-2.5,4.5);
+        }
+        
+        translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_inner_r+crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_h,hgt2,bev_s,bev_s);
+        translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_h,hgt2,bev_s,bev_s);
+    }
 }
 
 
@@ -656,41 +788,165 @@ module latch() latch_datum_from_origin() {
     
     //echo(latch_unlck_rot);
     
-    //locking tab
-    difference() {
-        intersection() {
-            cylinder_bev(latch_outer_r,hgt2,bev_s,bev_s);
-            origin_datum_from_latch() cylinder_bev(lring_outer_r,hgt2,bev_s,bev_s);
-            origin_datum_from_latch() cube([100,100,100]);
-        }
-        cylinder_neg_bev(latch_inner_r,hgt2,bev_s,bev_s);
-        origin_datum_from_latch() cylinder_neg_bev(latch_tab_r,hgt2,bev_s,bev_s);
-    }
+    crn_r_xs = 0.5;
+    crn_r_s = 1;
     
-    difference() {
-        union() {
-            //lever
-            intersection() {
-                cylinder_bev(latch_mid_r,hgt2,bev_s,bev_s);
-                origin_datum_from_latch() union() {
-                    cylinder_bev(lring_outer_r,hgt2,bev_s,bev_s);
-                    locking_ring_bottom_latch_prot_pos();
-                }
-            }
-            //button
+    rotate([0,0,-1*1*latch_unlck_rot]) {
+        //locking tab
+        difference() {
             intersection() {
                 cylinder_bev(latch_outer_r,hgt2,bev_s,bev_s);
-                origin_datum_from_latch() cylinder_bev(latch_prot_outer_r+5,hgt2,bev_s,bev_s);
-                origin_datum_from_latch() rotate([0,0,-acos((pow(latch_prot_outer_r+5,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_prot_outer_r+5)*latch_piv_r))+2*asin((15/2)/(latch_prot_outer_r+5))]) translate([0,-100,0]) cube([100,100,100]);
+                origin_datum_from_latch() cylinder_bev(lring_outer_r,hgt2,bev_s,bev_s);
+                origin_datum_from_latch() cube([100,100,100]);
+            }
+            cylinder_neg_bev(latch_inner_r,hgt2,bev_s,bev_s);
+            origin_datum_from_latch() cylinder_neg_bev(latch_tab_r,hgt2,bev_s,bev_s);
+            
+            
+            origin_datum_from_latch() linear_extrude(height=50) {
+                latch_corner_diamond(latch_tab_r+crn_r_xs,latch_inner_r+crn_r_xs,-2,-2);
+                latch_corner_diamond(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs,-2,2);
+                latch_corner_diamond(lring_outer_r-crn_r_xs,latch_outer_r-crn_r_xs,2,2);
             }
         }
-        for(ia=[0:0.5:1]) rotate([0,0,ia*latch_unlck_rot]) origin_datum_from_latch() cylinder_neg_bev(r_intrm1,hgt2,bev_s,bev_s);
         
-        intersection() {
-            rotate([0,0,latch_unlck_rot]) origin_datum_from_latch() cylinder_neg_bev(r_intrm1+2.5+clr_h,hgt2,bev_s,bev_s);
-            rotate_extrude(angle=-180) translate([latch_inner_r+clr_h,0]) square([50,50]);
+        origin_datum_from_latch() {
+            translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_inner_r+crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+            translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+            translate(latch_corner_loc(lring_outer_r-crn_r_xs,latch_outer_r-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+            
+            difference() {
+                linear_extrude(height=hgt2) {
+                    latch_corner_diamond(r_intrm1-clr_h-crn_r_xs,latch_inner_r-clr_h-crn_r_xs,4,4);
+                }
+                
+                translate(latch_corner_loc(r_intrm1-clr_h-crn_r_xs,latch_inner_r-clr_h-crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_h,hgt2,bev_s,bev_s);
+            }
         }
         
-        cylinder_neg_bev(1.5+0.15,hgt2,bev_s,bev_s);
+        difference() {
+            union() {
+                //lever
+                intersection() {
+                    cylinder_bev(latch_mid_r,hgt2,bev_s,bev_s);
+                    origin_datum_from_latch() union() {
+                        cylinder_bev(lring_outer_r,hgt2,bev_s,bev_s);
+                        locking_ring_latch_prot(hgt2,bev_s,bev_s);
+                    }
+                }
+                //button
+                intersection() {
+                    cylinder_bev(latch_outer_r,hgt2,bev_s,bev_s);
+                    origin_datum_from_latch() cylinder_bev(latch_button_outer_r,hgt2,bev_s,bev_s);
+                    origin_datum_from_latch() rotate([0,0,-acos((pow(latch_button_outer_r,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_button_outer_r)*latch_piv_r))+2*asin((15/2)/(latch_button_outer_r))]) translate([0,-100,0]) cube([100,100,100]);
+                }
+                
+                
+                origin_datum_from_latch() rotate([0,0,-acos((pow(latch_button_outer_r,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_button_outer_r)*latch_piv_r))+2*asin((15/2)/(latch_button_outer_r))]) {
+                    linear_extrude(height=hgt2) polygon([
+                        [sqrt(pow(latch_prot_outer_r+crn_r_s,2)-pow(crn_r_s,2)),crn_r_s],
+                        [sqrt(pow(latch_prot_outer_r+crn_r_s,2)-pow(crn_r_s,2)),crn_r_s-5],
+                        [sqrt(pow(latch_prot_outer_r+crn_r_s,2)-pow(crn_r_s,2))-5,crn_r_s-5/tan(acos(crn_r_s/(latch_prot_outer_r+crn_r_s)))],
+                    ]);
+                }
+            }
+            for(ia=[0:0.5:1]) rotate([0,0,ia*latch_unlck_rot]) origin_datum_from_latch() cylinder_neg_bev(r_intrm1,hgt2,bev_s,bev_s);
+            
+            intersection() {
+                rotate([0,0,latch_unlck_rot]) origin_datum_from_latch() cylinder_neg_bev(r_intrm1+2.5+clr_h,hgt2,bev_s,bev_s);
+                rotate_extrude(angle=-180) polygon([
+                    [200,-0.01],
+                    [latch_inner_r-bev_s,-0.01],
+                    [latch_inner_r,bev_s],
+                    [latch_inner_r,hgt2-bev_s],
+                    [latch_inner_r-bev_s,hgt2+0.01],
+                    [200,hgt2+0.01],
+                ]);//translate([latch_inner_r,0]) square([50,50]);
+            }
+            
+            
+            mirror([0,1,0]) origin_datum_from_latch() {
+                linear_extrude(height=hgt2) latch_corner_diamond(latch_button_outer_r-crn_r_s,latch_outer_r-crn_r_s,2,2);
+            }
+                
+            rotate([0,0,latch_unlck_rot]) origin_datum_from_latch() mirror([0,1,0]) {
+                linear_extrude(height=hgt2) latch_corner_diamond(r_intrm1+crn_r_xs,latch_inner_r-crn_r_xs,-2,2);
+                
+                linear_extrude(height=hgt2) latch_corner_diamond(r_intrm1+2.5+clr_h+crn_r_xs,latch_outer_r-crn_r_xs,-2,2);
+                
+                
+                translate(corner_trans(r_intrm1+2.5+clr_h,angle_cntr(r_intrm1+2.5+clr_h,latch_mid_r))) rotate([0,0,angle_cntr(r_intrm1+2.5+clr_h,latch_mid_r)]) translate([0,-0.5,hgt2/2]) {
+                    translate([3,0,0]) hull() {
+                        rotate([0,-90,0]) rotate([0,0,90]) cylinder_oh(3.5-0.25,50);
+                        translate([-0.25,0,0]) rotate([0,-90,0]) rotate([0,0,90]) cylinder_oh(3.5,50);
+                    }
+                    hull() {
+                        translate([-0.25,0,0]) rotate([0,-90,0]) rotate([0,0,90]) cylinder_oh(3.5+0.25+0.25,50);
+                        translate([0.25,0,0]) rotate([0,-90,0]) rotate([0,0,90]) cylinder_oh(3.5,50);
+                    }
+                        
+                }
+            }
+            
+            origin_datum_from_latch() rotate([0,0,-acos((pow(latch_button_outer_r,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_button_outer_r)*latch_piv_r))+2*asin((15/2)/(latch_button_outer_r))]) {
+            translate([sqrt(pow(latch_prot_outer_r+crn_r_s,2)-pow(crn_r_s,2)),crn_r_s,0]) rotate([0,0,-90]) cylinder_neg_bev(crn_r_s,hgt2,bev_s,bev_s,[0,10]);
+                
+            linear_extrude(height=50) polygon([
+                [sqrt(pow(latch_button_outer_r-crn_r_s,2)-pow(crn_r_s,2)),-crn_r_s],
+                [sqrt(pow(latch_button_outer_r-crn_r_s,2)-pow(crn_r_s,2)),-crn_r_s+5],
+                [sqrt(pow(latch_button_outer_r-crn_r_s,2)-pow(crn_r_s,2))+5,-crn_r_s+5/tan(acos(crn_r_s/(latch_button_outer_r-crn_r_s)))],
+            ]);
+        }
+            
+            cylinder_neg_bev(1.5+0.15,hgt2,bev_s,bev_s);
+        }
+        
+        
+        origin_datum_from_latch() {
+            mirror([0,1,0]) translate(latch_corner_loc(latch_button_outer_r-crn_r_s,latch_outer_r-crn_r_s)) cylinder_bev(crn_r_s,hgt2,bev_s,bev_s);
+        }
+        
+        rotate([0,0,latch_unlck_rot]) origin_datum_from_latch() mirror([0,1,0]) {
+            translate(latch_corner_loc(r_intrm1+crn_r_xs,latch_inner_r-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+            
+            translate(latch_corner_loc(r_intrm1+2.5+clr_h+crn_r_xs,latch_outer_r-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+            
+            difference() {
+                linear_extrude(height=hgt2) {
+                    latch_corner_diamond(r_intrm1+2.5+clr_h-(crn_r_xs+clr_h),latch_inner_r+(crn_r_xs+clr_h),4,-4);
+                }
+                
+                translate(latch_corner_loc(r_intrm1+2.5+clr_h-(crn_r_xs+clr_h),latch_inner_r+(crn_r_xs+clr_h))) cylinder_neg_bev(crn_r_xs+clr_h,hgt2,bev_s,bev_s);
+            }
+        }
+        
+        
+        origin_datum_from_latch() rotate([0,0,-acos((pow(latch_button_outer_r,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_button_outer_r)*latch_piv_r))+2*asin((15/2)/(latch_button_outer_r))]) {
+            translate([sqrt(pow(latch_button_outer_r-crn_r_s,2)-pow(crn_r_s,2)),-crn_r_s,0]) cylinder_bev(crn_r_s,hgt2,bev_s,bev_s);
+        }
     }
 }
+
+function angle_cntr(cntr_rad,piv_rad) = acos((pow(latch_piv_r,2)+pow(cntr_rad,2)-pow(piv_rad,2))/(2*latch_piv_r*cntr_rad));
+
+function angle_piv(cntr_rad,piv_rad) = 180 - acos((pow(latch_piv_r,2)+pow(piv_rad,2)-pow(cntr_rad,2))/(2*latch_piv_r*piv_rad));
+
+function corner_trans(rad,angle,trans=[0,0]) = [
+    rad*cos(angle),
+    rad*sin(angle)
+] + trans;
+
+module latch_corner_diamond(cntr_rad,piv_rad,cntr_rad_outset,piv_rad_outset) {
+    polygon([
+        corner_trans(cntr_rad,angle_cntr(cntr_rad,piv_rad)),
+        
+        corner_trans(cntr_rad,angle_cntr(cntr_rad,piv_rad)) + corner_trans(cntr_rad_outset,angle_cntr(cntr_rad,piv_rad)),
+        
+        corner_trans(piv_rad,angle_piv(cntr_rad,piv_rad)) + [latch_piv_r,0] + corner_trans(piv_rad_outset,angle_piv(cntr_rad,piv_rad)),
+    ]);
+}
+
+function latch_corner_loc(cntr_rad,piv_rad) = corner_trans(cntr_rad,angle_cntr(cntr_rad,piv_rad));
+
+
+
