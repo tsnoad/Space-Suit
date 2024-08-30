@@ -50,6 +50,7 @@ clr_h = 0.4;
 clr_v = 0.4;
 
 passage_r = 37.5; //width of the hole that our hand has to go through. This is the basis for all further sizing
+//actual opening is smaller in order to accomodate the o-ring gland
 
 lug_inner_r = passage_r+5; //radius of the root of the lugs
 lug_outer_r = lug_inner_r + 5; //outer radius of the lugs
@@ -84,34 +85,39 @@ latch_inner_r = latch_mid_r-5;
 latch_outer_r = latch_mid_r+5;
 
 
+
+include <../Modular Locking Ring.scad>;
+
+
 //assembled
 difference() {
     union() {
-        *union() {
+        union() {
             sleeve_mandril();
-            sleeve_wedge();
-            sleeve_collar();
+            *sleeve_wedge();
+            *sleeve_collar();
         }
         
-        translate([0,0,25+5]) {
-            *sleeve_base_ring_bottom();
+        *translate([0,0,25+5]) {
+            sleeve_base_ring_bottom();
             translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_base_ring_top();
             
             rotate([0,0,1*30]) {
                 *translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_latch();
             
-                *translate([0,0,bring_btm_hgt]) sleeve_locking_ring_bottom();
+                translate([0,0,bring_btm_hgt]) sleeve_locking_ring_bottom();
                 
-                translate([0,0,bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) sleeve_locking_ring_top();
+                *translate([0,0,bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) sleeve_locking_ring_top();
             }
         }
         
-        translate([0,0,25+5+bring_btm_hgt+lring_btm_hgt+bring_top_hgt]) { 
+        *translate([0,0,25+5+bring_btm_hgt+lring_btm_hgt+bring_top_hgt]) { 
             glove_mandril();
             *glove_collar();
         }
     }
-    *rotate([0,0,sleeve_seam_a[0]]) cube([100,100,100]);
+    cube([100,100,100]); //cutout to check clearances
+    rotate([0,0,sleeve_seam_a[0]]) cube([100,100,100]); //cutout to check clearances
 }
 
 
@@ -169,10 +175,6 @@ module sleeve_locking_ring_top() {
 
 
 
-include <../Modular Locking Ring.scad>;
-
-
-
 module sleeve_mandril() difference() {
     mand_hgt = 25;
     rib_hgt = /*mand_hgt/2*/ 10;
@@ -181,6 +183,7 @@ module sleeve_mandril() difference() {
     
     rotate_extrude($fn=$fn*2) {
         difference() {
+            //body of the mandril
             polygon([
                 [passage_r,bev_s+((mand_r0-bev_s-1.6-bev_s)-(passage_r))/tan(15)],
                 [mand_r0-bev_s-1.6-bev_s,bev_s],
@@ -196,6 +199,7 @@ module sleeve_mandril() difference() {
                 [passage_r,mand_hgt+5-bev_xs],
             ]);
             
+            //groove
             translate([mand_r0+rib_hgt*tan(sleeve_a),rib_hgt]) rotate([0,0,-sleeve_a]) translate([0,0]) {
                 step_h0 = 2.5;
                 step_h1 = step_h0 + 1.5;
@@ -208,45 +212,49 @@ module sleeve_mandril() difference() {
             }
         }
     }
-        
+  
+    //heigh of the screes is based on their length and the width of the pieces they go through
     screw_z = mand_hgt+5 + (bring_btm_hgt+lring_btm_hgt) + (bring_top_hgt-0.6) - 18;
     
-    translate([0,0,screw_z]) intersection() {
-        translate([0,0,-10]) rotate_extrude($fn=$fn*2) round_step(passage_r,max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15))),10,1,5);
-        
-        hull() {
-            translate([0,0,-25]) cylinder(r=max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15)))-bev_s,h=25,$fn=$fn*2);
-            translate([0,0,-25]) cylinder(r=max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15))),h=25-bev_s,$fn=$fn*2);
-        }
-    }
+    translate([0,0,screw_z]) {
+        //recess for the screws
+        intersection() {
+            translate([0,0,-10]) rotate_extrude($fn=$fn*2) round_step(passage_r,max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15))),10,1,5);
             
-    translate([0,0,screw_z]) intersection() {
-        hull() for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
-            translate([0,-3,0]) {
-                rotate([0,90,0]) rotate([0,0,90]) rotate_extrude(angle=-22.5) {
-                    translate([3,0]) circle(r=3);
-                    translate([0,-3]) square([3,2*3]);
+            hull() {
+                translate([0,0,-25]) cylinder(r=max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15)))-bev_s,h=25,$fn=$fn*2);
+                translate([0,0,-25]) cylinder(r=max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15))),h=25-bev_s,$fn=$fn*2);
+            }
+        }
+        translate([0,0,-0.01]) cylinder(r1=passage_r+bev_s,r2=passage_r,h=bev_s,$fn=$fn*2);
+        intersection() {
+            hull() for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
+                translate([0,-3,0]) {
+                    rotate([0,90,0]) rotate([0,0,90]) rotate_extrude(angle=-22.5) {
+                        translate([3,0]) circle(r=3);
+                        translate([0,-3]) square([3,2*3]);
+                    }
+                    rotate([-22.5,0,0]) translate([0,3,-50]) cylinder(r=3,h=50);
                 }
-                rotate([-22.5,0,0]) translate([0,3,-50]) cylinder(r=3,h=50);
+            }
+            
+            union() {
+                hull() for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-25]) {
+                    cylinder(r=3-bev_s,h=25);
+                    cylinder(r=3,h=25-bev_s);
+                }
+                for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-25]) {
+                    cylinder(r=3,h=25);
+                }
             }
         }
-        
-        union() {
-            hull() for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-25]) {
-                cylinder(r=3-bev_s,h=25);
-                cylinder(r=3,h=25-bev_s);
-            }
-            for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-25]) {
-                cylinder(r=3,h=25);
-            }
+           
+        //cutouts for screws
+        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-0.01]) {
+            //make the screws easier to insert
+            hull() for(i=[0,-10]) rotate([i,0,0]) cylinder(r=1.5+0.15,h=18);
+            cylinder(r1=3,r2=0,h=3);
         }
-        
-        //translate([0,0,-25]) cylinder(r=100,h=25);
-    }
-       
-    for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),screw_z-0.01]) {
-        hull() for(i=[0,-10]) rotate([i,0,0]) cylinder(r=1.5+0.15,h=18);
-        cylinder(r1=3,r2=0,h=3);
     }
 }
 
@@ -610,6 +618,7 @@ module glove_mandril() difference() {
         
         translate([0,0,10+2]) rotate_extrude($fn=$fn*2) union() {
             difference() {
+                //body of the mandril
                 polygon([
                     [0,-2],
                     [r1,-2],
@@ -621,7 +630,7 @@ module glove_mandril() difference() {
                     [0,col_h],
                 ]);
                 
-                
+                //groove
                 translate([r1,0]) rotate([0,0,glove_a]) translate([0,col_h/2/cos(glove_a)]) {
                     step_h0 = 5;
                     step_h1 = step_h0 + 1.5;
@@ -634,13 +643,15 @@ module glove_mandril() difference() {
                 }
             }
             
+            //rounded step from the locking ring to the glove radius
             mirror([0,1]) round_step(r1,lug_inner_r,2,1,1);
         }
     }
     translate([0,0,20]) cylinder_neg_bev(passage_r,-20+10+2+col_h,0,bev_s,$fn=$fn*2);
     
+    
     translate([0,0,-0.01]) rotate_extrude($fn=$fn*2) union() {
-        
+        //cutout for the o-ring gland
         polygon([
             [lug_inner_r-2.4+bev_xs,0],
             [lug_inner_r-2.4,bev_xs],
@@ -652,6 +663,7 @@ module glove_mandril() difference() {
             [lug_inner_r-2.4-oring_gland_wid-bev_xs,0],
         ]);
         
+        //leave a bit more material so there is enough wall thickness around the gland
         polygon([
             [0,0],
             [lug_inner_r-2.4-oring_gland_wid-2.4+bev_s,0],
@@ -659,8 +671,8 @@ module glove_mandril() difference() {
             [lug_inner_r-2.4-oring_gland_wid-2.4,oring_gland_dep],
             [0,oring_gland_dep],
         ]);
-        
         translate([0,oring_gland_dep]) round_step(lug_inner_r-2.4-oring_gland_wid-2.4,passage_r,5,2,2);
+        //cutout the passage
         translate([0,oring_gland_dep+5]) square([passage_r,50]);
     }
 }
