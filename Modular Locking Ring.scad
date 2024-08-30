@@ -1,4 +1,10 @@
-
+/*
+ * Modular Locking Ring
+ * Licenced under CC BY-NC-SA 4.0
+ * By: TSnoad
+ * https://github.com/tsnoad/TBC
+ * https://hackaday.io/project/TBC
+ */
 
 //passage_r = ;
 
@@ -26,8 +32,9 @@ bev_l = 0.8;
 bev_s = 0.4;
 bev_xs = 0.2;
 
-clr_h = 0.4;
-clr_v = 0.4;
+//these should be specified elsewhere
+//clr_h = 0.4;
+//clr_v = 0.4;
 
 
 

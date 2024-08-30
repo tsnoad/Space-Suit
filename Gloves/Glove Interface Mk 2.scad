@@ -1,29 +1,30 @@
-$fn = 72;
+/*
+ * Spacesuit Glove Interface Mk 2
+ * Licenced under CC BY-NC-SA 4.0
+ * By: TSnoad
+ * https://github.com/tsnoad/TBC
+ * https://hackaday.io/project/TBC
+ */
+
+$fn = 36;
 
 
+//params for immersion suit
+//this is based on measuring the flat width of sleeve
+sleeve_c1 = 2*172; //circumerference higher up the sleeve
+sleeve_c2 = 2*139; //circumference at the end of the sleeve
+sleeve_c12h = 103; //distance between the two measurement points
 
-/*bev_xl = 2;
-bev_l = 0.8;
-bev_s = 0.4;
-bev_xs = 0.2;*/
-
-sleeve_c1 = 2*172;
-sleeve_c2 = 2*139;
-sleeve_c12h = 103;
-
-sleeve_r1 = sleeve_c1/3.14159/2;
+sleeve_r1 = sleeve_c1/3.14159/2; //convert to radius
 sleeve_r2 = sleeve_c2/3.14159/2;
-sleeve_a = abs(atan((sleeve_r2-sleeve_r1)/sleeve_c12h));
+sleeve_a = abs(atan((sleeve_r2-sleeve_r1)/sleeve_c12h)); //and angle
 
-sleeve_seam_a = [0,360-(22+87)/sleeve_c2*360 % 360] + [1,1]*45;
+sleeve_seam_a = [0,360-(22+87)/sleeve_c2*360 % 360] + [1,1]*45; //location of seams, based on right hand, a=0 is bottom/back of sleeve
 sleeve_seam_widh = 20/2;
-//echo(sleeve_seam_a);
 
+sleeve_fab_thk = 0.8; //thickness of the fabric
 
-sleeve_fab_thk = 0.8;
-//r1 = glove_r1 - 25*tan(sleeve_a);
-sleeve_clr_hgt = 40;
-
+//params for glove
 glove_c1 = 2*140;
 glove_c2 = 2*127;
 glove_c12h = 50;
@@ -32,25 +33,145 @@ glove_r1 = glove_c1/3.14159/2;
 glove_r2 = glove_c2/3.14159/2;
 glove_a = abs(atan((glove_r2-glove_r1)/glove_c12h));
 
+//params for o-ring/gasket material
+//using 3mm diameter EPDM sponge gasket
 oring_rad = 1.5;
-oring_area = 3.14159*pow(oring_rad,2);
+oring_area = 3.14159*pow(oring_rad,2); //cross sectional area
 
-oring_gland_wid = 2;
-oring_gland_dep = oring_area/oring_gland_wid;
+oring_gland_wid = 2; //width of the gland/recess that the o-ring will be stuffed into
+oring_gland_dep = oring_area/oring_gland_wid; //how deep does the gland/recess have to be
+oring_fol_hgt = oring_area/oring_gland_wid*0.25; //the o-ring is compressed with a protrusion/follower. The amount of compression should be 25% to get a good seal, so we need to work out the height of the follower, based on that
 
-oring_fol_hgt = oring_area/oring_gland_wid*0.25;
 
-//echo(oring_gland_dep);
-//echo(oring_fol_hgt);
+//params for the modular locking ring
 
+//horizontal and vertical clearances
+clr_h = 0.4;
+clr_v = 0.4;
+
+passage_r = 37.5; //width of the hole that our hand has to go through. This is the basis for all further sizing
+
+lug_inner_r = passage_r+5; //radius of the root of the lugs
+lug_outer_r = lug_inner_r + 5; //outer radius of the lugs
+lug_hgt = 5; //height of the lugs
+
+lug_num = 6; //how many
+//lug_widh = 20; //if we want to specify the half width in absolute term
+lug_widh = 3.14159*2*((lug_outer_r-lug_inner_r)/2+lug_inner_r)/lug_num/4 - 2;
+
+lring_top_hgt = 5; //thickness of top flange (with the lug cutouts) of the locking ring
+lring_outer_r = lug_outer_r + 5; //outside radius of the locking ring
+lring_btm_hgt = 5; //thickness of bottom flange of the locking ring
+
+bring_top_hgt = 5;
+bring_btm_hgt = 5; //thickness of the base
+bring_outer_r = lug_outer_r+0;
+
+limtab_r = lug_inner_r + 2.5; //the outer radius of the lugs that limit rotation of the locking ring
+limtab_num = 3; //number of limiting lugs
+limtab_a_trav = 360/limtab_num/4; //how much travel is allowed - this is based on number of lugs, but the number used is smaller because of the way the model is put together
+limtab_a_offs = 360/limtab_num/4; //offset in case we need to put screws in a particular place
+limtab_widh = 3.14159*2*limtab_r/limtab_num/8; //how wide is each tab
+//limtab_widh = 7.5; //or if we want to specify the tab width absolutely
+
+//latch parameters
+latch_prot_outer_r = lring_outer_r + 5; //outer radius of the locking ring protrusion that houses the latch
+latch_piv_r = lug_outer_r+clr_h + (latch_prot_outer_r - (lug_outer_r+clr_h))/2; //where is the pivot point
+latch_tab_r = lug_inner_r+clr_h + 2.4 + clr_h; //what is the radius of the tab/pawl of the latch. This is set so the wall thickness in the base ring top is 2.4mm thick (3 wall thicknesses)
+latch_button_outer_r = latch_prot_outer_r + 5; //outer radius of the latch button from the origin, ie how for does the button protrude
+latch_mid_r = 2*latch_piv_r*sin(30/2); //how long is the latch in terms of radius from the pivot
+latch_inner_r = latch_mid_r-5;
+latch_outer_r = latch_mid_r+5;
+
+
+//assembled
 difference() {
     union() {
-        sleeve_mandril();
-        !sleeve_wedge();
-        sleeve_collar();
+        *union() {
+            sleeve_mandril();
+            sleeve_wedge();
+            sleeve_collar();
+        }
+        
+        translate([0,0,25+5]) {
+            *sleeve_base_ring_bottom();
+            translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_base_ring_top();
+            
+            rotate([0,0,1*30]) {
+                *translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_latch();
+            
+                *translate([0,0,bring_btm_hgt]) sleeve_locking_ring_bottom();
+                
+                translate([0,0,bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) sleeve_locking_ring_top();
+            }
+        }
+        
+        translate([0,0,25+5+bring_btm_hgt+lring_btm_hgt+bring_top_hgt]) { 
+            glove_mandril();
+            *glove_collar();
+        }
     }
     *rotate([0,0,sleeve_seam_a[0]]) cube([100,100,100]);
 }
+
+
+module sleeve_base_ring_bottom() {
+    base_ring_bottom() {
+        hgt1 = bring_btm_hgt-clr_v;
+        hgt2 = bring_btm_hgt+lring_btm_hgt;
+
+        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
+            cylinder_neg_bev(1.5+0.15,hgt2,bev_xs,bev_xs);
+            
+            if (ia%120!=0) {
+                translate([0,0,hgt1]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,10]);
+                
+            translate([0,(1.5+0.15),hgt1]) for(ia=[-1,1]*45) rotate([0,0,ia+180]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
+            }
+        }
+    }
+}
+
+module sleeve_base_ring_top() {
+    base_ring_top() {
+        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
+            cylinder_bev(1.25,bring_top_hgt-0.6,0,0.25);
+            cylinder_bev(1.25+bev_xs,0.01+bev_xs,0,bev_xs);
+        }
+    }
+}
+
+module sleeve_latch() {
+    rotate([0,0,-30]) latch();
+}
+
+module sleeve_locking_ring_bottom() {
+    locking_ring_bottom() {
+        hgt1 = lring_btm_hgt-clr_v;
+        hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
+
+        for(ia=[0,1,2,3,5]*60) rotate([0,0,ia]) translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
+            cylinder_neg_bev(1.5+0.15,hgt2,(3-(1.5+0.15)),0);
+            translate([0,0,hgt1]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
+            translate([0,-(1.5+0.15),hgt1]) for(ia=[-1,1]*45) rotate([0,0,ia]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
+        }
+    }
+}
+
+module sleeve_locking_ring_top() {
+    locking_ring_top() {
+        for(ia=[0,1,2,3,5]*60) rotate([0,0,ia]) translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
+            cylinder_bev(1.25,lring_top_hgt-0.6,0,0.25);
+            cylinder_bev(1.25+bev_xs,0.01+bev_xs,0,bev_xs);
+        }
+    }
+}
+
+
+
+include <../Modular Locking Ring.scad>;
+
+
 
 module sleeve_mandril() difference() {
     mand_hgt = 25;
@@ -384,165 +505,6 @@ module sleeve_collar() difference() {
     }
 }
 
-module sleeve_cs() {
-
-    
-
-}
-
-*union() {
-    *translate([0,0,(-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt)-sleeve_c12h]) union() {
-        cylinder(r1=sleeve_r1,r2=sleeve_r2,h=sleeve_c12h);
-    }
-    
-    *translate([0,0,0]) union() {
-        cylinder(r1=glove_r1,r2=glove_r2,h=glove_c12h);
-    }
-    translate([sleeve_r2-sleeve_fab_thk/2,0]) {
-        circle(r=sleeve_fab_thk/2);
-        translate() circle(r=sleeve_fab_thk/2);
-    }
-}
-
-
-*difference() {
-    translate([0,0,(-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt)-(25+2.75+5)]) {
-        *sleeve_mandril();
-        sleeve_collar();
-    }
-    *translate([0,0,-0.01]) cube([200,200,200]);
-}
-
-*difference() {
-    union() {
-        glove_mandril();
-        glove_collar();
-    }
-    translate([0,0,-0.01]) cube([200,200,200]);
-}
-
-
-
-clr_h = 0.4;
-clr_v = 0.4;
-
-
-//passage_r = 40.5;
-passage_r = 37.5;
-
-lug_inner_r = passage_r+5;
-lug_outer_r = lug_inner_r + 5;
-lug_hgt = 5;
-
-lug_num = 6;
-//lug_widh = 20;
-lug_widh = 3.14159*2*((lug_outer_r-lug_inner_r)/2+lug_inner_r)/lug_num/4;
-
-
-lring_top_hgt = 5; //thickness of top flange (with the lug cutouts) of the locking ring
-lring_outer_r = lug_outer_r + 5; //outside radius of the locking ring
-lring_btm_hgt = 5; //thickness of bottom flange of the locking ring
-
-bring_top_hgt = 5;
-bring_btm_hgt = 5; //thickness of the base
-//bring_inner_r = ;
-//bring_intrm_r = ;
-bring_outer_r = lug_outer_r+0;
-
-limtab_r = lug_inner_r + 2.5;
-limtab_num = 3;
-limtab_a_trav = 360/limtab_num/4;
-limtab_a_offs = 360/limtab_num/4;
-limtab_widh = 3.14159*2*limtab_r/limtab_num/8;
-//limtab_widh = 7.5;
-
-latch_prot_outer_r = lring_outer_r + 5;
-latch_piv_r = lug_outer_r+clr_h + (latch_prot_outer_r - (lug_outer_r+clr_h))/2;
-
-//latch_tab_r = lug_outer_r+clr_h - (2.5-clr_h);
-latch_tab_r = lug_inner_r+clr_h + 2.4 + clr_h;
-
-latch_button_outer_r = latch_prot_outer_r + 5;
-
-latch_mid_r = 2*latch_piv_r*sin(30/2);
-latch_inner_r = latch_mid_r-5;
-latch_outer_r = latch_mid_r+5;
-
-
-
-translate([0,0,25+5]) difference() {
-    translate([0,0,/*-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt*/]) {
-        sleeve_base_ring_bottom();
-        
-        *translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_base_ring_top();
-        
-        rotate([0,0,30*0]) {
-            translate([0,0,bring_btm_hgt+lring_btm_hgt]) sleeve_latch();
-        
-            translate([0,0,bring_btm_hgt]) sleeve_locking_ring_bottom();
-            translate([0,0,bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) sleeve_locking_ring_top();
-        }
-    }
-    *translate([0,0,-50]) cube([200,200,200]);
-}
-
-
-module sleeve_base_ring_bottom() {
-    base_ring_bottom() {
-        hgt1 = bring_btm_hgt-clr_v;
-        hgt2 = bring_btm_hgt+lring_btm_hgt;
-
-        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
-            cylinder_neg_bev(1.5+0.15,hgt2,bev_xs,bev_xs);
-            
-            if (ia%120!=0) {
-                translate([0,0,hgt1]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,10]);
-                
-            translate([0,(1.5+0.15),hgt1]) for(ia=[-1,1]*45) rotate([0,0,ia+180]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
-            }
-        }
-    }
-}
-
-module sleeve_base_ring_top() {
-    base_ring_top() {
-        for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
-            cylinder_bev(1.25,bring_top_hgt-0.6,0,0.25);
-            cylinder_bev(1.25+bev_xs,0.01+bev_xs,0,bev_xs);
-        }
-    }
-}
-
-module sleeve_latch() {
-    rotate([0,0,-30]) latch();
-}
-
-module sleeve_locking_ring_bottom() {
-    locking_ring_bottom() {
-        hgt1 = lring_btm_hgt-clr_v;
-        hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
-
-        for(ia=[0,1,2,3,5]*60) rotate([0,0,ia]) translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
-            cylinder_neg_bev(1.5+0.15,hgt2,(3-(1.5+0.15)),0);
-            translate([0,0,hgt1]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
-            translate([0,-(1.5+0.15),hgt1]) for(ia=[-1,1]*45) rotate([0,0,ia]) cylinder_neg_bev(1.5+0.15,hgt2-hgt1,0,bev_xs,[0,-10]);
-        }
-    }
-}
-
-module sleeve_locking_ring_top() {
-    locking_ring_top() {
-        for(ia=[0,1,2,3,5]*60) rotate([0,0,ia]) translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
-            cylinder_bev(1.25,lring_top_hgt-0.6,0,0.25);
-            cylinder_bev(1.25+bev_xs,0.01+bev_xs,0,bev_xs);
-        }
-    }
-}
-
-
-
-include <../Modular Locking Ring.scad>;
-
 module glove_collar() translate([0,0,10+2]) difference() {
     fab_thk = 0.5;
     r1 = glove_r1 - 25*tan(glove_a);
@@ -635,30 +597,6 @@ module glove_collar() translate([0,0,10+2]) difference() {
             translate([20,-20*tan(30),0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
         }
     }
-    
-    /*
-    hull() for(ix=[0,100]) translate([ix,0,-10]) cylinder(r=1.5,h=100);
-        
-    for(iz=[max_bolt_h,max_bolt_h-6]) translate([rc,0,iz]) rotate([-90,0,0]) {
-        translate([0,0,-50]) hull() cylinder_oh(1.5+0.15,100);
-    }
-    hull() for(iz=[max_bolt_h,max_bolt_h-6]) translate([rc,0,iz]) rotate([-90,0,0]) {
-        for(ib=[0,0.2]) translate([0,0,10+(0.2-ib)]) {
-            cylinder(r=3-ib,h=100);
-            translate([20,0,0]) cylinder(r=3-ib,h=100);
-            translate([20,-20*tan(45),0]) cylinder(r=3-ib,h=100);
-        }
-    }
-    mirror([0,1,0]) hull() for(iz=[max_bolt_h,max_bolt_h-6]) translate([rc,0,iz]) rotate([-90,0,0]) {
-        for(ib=[0,0.2]) translate([0,0,10+(0.2-ib)]) {
-            for(ia=[0:60:360-60]) rotate([0,0,ia]) translate([2.75/cos(30),0,0]) {
-                cylinder(r=max(0.01,0.2-ib),h=100);
-            }
-            
-            translate([20,0,0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
-            translate([20,-20*tan(45),0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
-        }
-    }*/
 }
 
 module glove_mandril() difference() {
@@ -733,149 +671,6 @@ module glove_mandril() difference() {
 
 
 
-
-/*
-module sleeve_mandril() difference() {
-    fab_thk = 1;
-    rim_r = 2.75;
-    col_h = 25;
-    
-    r1 = sleeve_r2;
-    rc = r1 + rim_r/cos(sleeve_a) + col_h*tan(sleeve_a);
-    r2 = max(rc, 37.5+10);
-    r3 = 37.5;
-    
-    
-    rotate_extrude($fn=$fn*2) difference() {
-        polygon([
-            [r3,bev_s],
-            [r3+bev_s,0],
-        
-            [r1+bev_s*tan(sleeve_a)-bev_s,0],
-            [r1+bev_s*tan(sleeve_a),bev_s],
-        
-            //[rc-rim_r*cos(sleeve_a),col_h+rim_r*sin(sleeve_a)],
-            //[rc,col_h],
-            //[rc,col_h+rim_r],
-        
-            //[r2-bev_s,col_h+rim_r],
-            //[r2,col_h+rim_r+bev_s],
-        
-            //[r2,col_h+rim_r+5-bev_s],
-            //[r2-bev_s,col_h+rim_r+5],
-        
-            [rc-rim_r*cos(sleeve_a),col_h+rim_r*sin(sleeve_a)],
-        
-            [rc-rim_r*cos(sleeve_a),col_h+rim_r+5-bev_s],
-            [rc-rim_r*cos(sleeve_a)-bev_s,col_h+rim_r+5],
-        
-            [r3+bev_xs,col_h+rim_r+5],
-            [r3,col_h+rim_r+5-bev_xs],
-        ]);
-        //translate([rc,col_h]) circle(r=rim_r,$fn=$fn/2);
-        
-        translate([r1,0]) rotate([0,0,-sleeve_a]) translate([0,col_h/2/cos(sleeve_a)]) {
-            step_h0 = 5;
-            step_h1 = step_h0 + 1.5;
-            step_l = 4;
-            
-            mirror([1,0]) {
-                translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2,2+fab_thk);
-                translate([-step_h0,step_l]) mirror([0,1]) round_step(step_h0,step_h1,step_l,2,2+fab_thk);
-            }
-        }
-    }
-    
-    //translate([0,0,-0.01]) cube([200,200,200]);
-    
-    translate([0,0,col_h+rim_r+5]) {
-        for(ia=[0:120:360-120]) rotate([0,0,ia]) translate([lug_inner_r-(1.5+0.15),0,0]) {
-            sleeve_mandril_screw_co();
-        }
-        for(ia=[60:120:60+360-120]) rotate([0,0,ia]) translate([passage_r+(limtab_r-passage_r)/2,0,0]) {
-            sleeve_mandril_screw_co();
-        }
-    }
-}
-
-module sleeve_mandril_screw_co() {
-    translate([0,0,-3]) {
-        cylinder(r=1.75,h=100);
-        hull() {
-            cylinder(r=3,h=0.01);
-            cylinder(r=0.01,h=3);
-        }
-        intersection() {
-            rotate([0,10,0]) hull() {
-                sphere(r=3);
-                translate([0,0,-50]) {
-                    cylinder(r=3,h=50);
-                    for(ia2=[-1,1]*45) rotate([0,0,ia2]) translate([-15,0,0]) cylinder(r=3,h=50);
-                }
-            }
-            translate([0,0,-50]) cylinder(r=50,h=50+0.01);
-        }
-    }
-}
-
-
-
-
-module sleeve_collar() difference() {
-    fab_thk = 1.5;
-    rim_r = 2.0-fab_thk;
-    col_h = 30;
-
-    r1 = sleeve_r2 + fab_thk*cos(sleeve_a);
-    rc = r1 + rim_r/cos(sleeve_a) + col_h*tan(sleeve_a);
-
-    max_bolt_h = ((rc-r1)-(1.5+0.15)-1.6)/tan(sleeve_a);
-    
-    intersection() {
-        rotate_extrude($fn=$fn*2) {
-            polygon([
-                [r1,0],
-                [rc-rim_r*cos(sleeve_a),col_h+rim_r*sin(sleeve_a)],
-                [rc,col_h],
-                [rc+rim_r*cos(sleeve_a),col_h+rim_r*sin(sleeve_a)],
-                [rc+(rc-r1),0],
-            ]);
-            translate([rc,col_h]) circle(r=rim_r);
-            
-            hull() for(ix=[-1,1]*((rc-r1)-2*cos(sleeve_a))) translate([rc+ix,-2*sin(sleeve_a)]) circle_oh(2);
-            
-            translate([r1,0]) rotate([0,0,-sleeve_a]) translate([0,col_h/2/cos(sleeve_a)]) {
-                step_h0 = 5;
-                step_h1 = step_h0 + 1.5;
-                step_l = 4;
-                
-                mirror([1,0]) { 
-                    translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2+fab_thk,2);
-                    translate([-step_h0,step_l]) mirror([0,1]) round_step(step_h0,step_h1,step_l,2+fab_thk,2);
-                }
-            }
-        }
-        
-        *union() {
-            translate([-200+25,-100,-50]) cube([200,200,200]);
-            for(iy=[0,1]) mirror([0,iy,0]) rotate([90,0,0]) hull() {
-                translate([0,0,1.5]) linear_extrude(height=50) hull() {
-                    translate([rc,col_h]) circle(r=rim_r-bev_l);
-                    
-                    for(ix=[-1,1]*((rc-r1)-2*cos(sleeve_a))) translate([rc+ix,-2*sin(sleeve_a)]) circle_oh(2-bev_l);
-                }
-                translate([0,0,1.5+50]) linear_extrude(height=50) hull() {
-                    translate([rc,col_h]) circle(r=rim_r-bev_l+50);
-                    
-                    for(ix=[-1,1]*((rc-r1)-2*cos(sleeve_a))) translate([rc+ix,-2*sin(sleeve_a)]) circle_oh(2-bev_l+50);
-                }
-            }
-        }
-    }
-    
-    //translate([0,0,-0.01]) cube([200,200,200]);
-}
-*/
 
 
 
