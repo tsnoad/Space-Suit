@@ -1,7 +1,7 @@
 
 use <PLSS.scad>;
 
-$fn = 72;
+$fn = 36;
 
 //translate([-15,-20,-780]) {
 *intersection() {
@@ -47,8 +47,8 @@ bev_s = 0.5; //bevel
 //assembly
 *neck_spacer([0,120,240]);
 
-*shoulder_yoke();
-*mirror([1,0,0]) shoulder_yoke();
+shoulder_yoke();
+mirror([1,0,0]) shoulder_yoke();
 *neck_spacer_front();
 *neck_spacer_back();
 
@@ -56,6 +56,33 @@ bev_s = 0.5; //bevel
 *back_mid();
 *back_lower();
 *chest_plate();
+
+
+//shape of torso
+*union() {
+    for(ix=[0,1]) mirror([ix,0,0]) translate([-120,0,0]) rotate([0,90-25,0]) {
+        translate([0,0,0]) linear_extrude(height=(120-back_hgt2*sin(25))/cos(25)) back_upper_cs(0); 
+    }
+    
+    for(ix=[0,1]) mirror([ix,0,0]) translate([-120,0,0]) rotate([0,90-25,0]) {
+        *translate([should_rad,0,0]) rotate([0,0,-clav_ang]) hull() {
+            cylinder(r=should_rad,h=strap_wid);
+            translate([0,clav_dep,0]) cylinder(r=should_rad,h=strap_wid);
+        }
+        //translate([should_rad,0,0]) sphere(r=30);
+        *hull() translate([should_rad,0,-100]) {
+            sphere(r=30);
+            translate([0,0,100+strap_wid]) sphere(r=30);
+            translate([100*tan(25),0,100]) sphere(r=30+100*tan(25));
+        }
+    }
+    
+    translate([0,-((back_rad-back_dep)+outset),-back_hgt+(120-back_hgt2*sin(25))*tan(25)]) rotate([90,0,0]) rotate([0,0,90-25]) rotate_extrude(angle=2*25) intersection() {
+        rotate([0,0,180]) translate([-back_hgt2,(back_rad-back_dep)+outset]) back_upper_cs(0); 
+        translate([0,-250]) square([500,500]);
+    }
+    
+}
 
 //printable
 *rotate([180+15,0,0]) neck_spacer([0]);
@@ -253,10 +280,13 @@ module back_upper() intersection() {
 //cross section of back profile
 module back_upper_cs(outset=0) hull() {
     //outset = 0;
-    *#translate([30,0]) circle(r=30+outset);
+    translate([30,0]) circle(r=30+outset);
     
     translate([back_hgt2,(back_rad-back_dep)]) {
-        circle(r=back_rad+outset,$fn=$fn*4);
+        intersection() {
+            circle(r=back_rad+outset,$fn=$fn*4);
+            translate([-(back_hgt2+outset-10),-(back_rad-back_dep)-500]) square([back_hgt2+outset-10,500]);
+        }
     
         rotate([0,0,-atan((back_hgt2-should_rad)/(back_rad-back_dep))+asin(30/back_rad)]) translate([0,-(back_rad-50)]) rotate([0,0,-atan((back_hgt2-should_rad)/(back_rad-back_dep))+asin(30/back_rad)]) {
             circle(r=50+5+outset,$fn=$fn*4);
