@@ -15,6 +15,15 @@ sleeve_r1 = sleeve_c1/3.14159/2;
 sleeve_r2 = sleeve_c2/3.14159/2;
 sleeve_a = abs(atan((sleeve_r2-sleeve_r1)/sleeve_c12h));
 
+sleeve_seam_a = [0,360-(22+87)/sleeve_c2*360 % 360] + [1,1]*45;
+sleeve_seam_widh = 20/2;
+//echo(sleeve_seam_a);
+
+
+sleeve_fab_thk = 0.8;
+//r1 = glove_r1 - 25*tan(sleeve_a);
+sleeve_clr_hgt = 40;
+
 glove_c1 = 2*140;
 glove_c2 = 2*127;
 glove_c12h = 50;
@@ -31,25 +40,377 @@ oring_gland_dep = oring_area/oring_gland_wid;
 
 oring_fol_hgt = oring_area/oring_gland_wid*0.25;
 
-echo(oring_gland_dep);
-echo(oring_fol_hgt);
+//echo(oring_gland_dep);
+//echo(oring_fol_hgt);
 
+difference() {
+    union() {
+        sleeve_mandril();
+        !sleeve_wedge();
+        sleeve_collar();
+    }
+    *rotate([0,0,sleeve_seam_a[0]]) cube([100,100,100]);
+}
 
+module sleeve_mandril() difference() {
+    mand_hgt = 25;
+    rib_hgt = /*mand_hgt/2*/ 10;
+    
+    mand_r0 = sleeve_r2-sleeve_fab_thk/2*cos(sleeve_a);
+    
+    rotate_extrude($fn=$fn*2) {
+        difference() {
+            polygon([
+                [passage_r,bev_s+((mand_r0-bev_s-1.6-bev_s)-(passage_r))/tan(15)],
+                [mand_r0-bev_s-1.6-bev_s,bev_s],
+                [mand_r0-bev_s-1.6,0],
+                
+                [mand_r0-bev_s,0],
+                [mand_r0-bev_s*tan(sleeve_a),bev_s],
+                
+                [mand_r0+mand_hgt*tan(sleeve_a),mand_hgt],
+                [mand_r0+mand_hgt*tan(sleeve_a),mand_hgt+5],
+                
+                [passage_r+bev_xs,mand_hgt+5],
+                [passage_r,mand_hgt+5-bev_xs],
+            ]);
+            
+            translate([mand_r0+rib_hgt*tan(sleeve_a),rib_hgt]) rotate([0,0,-sleeve_a]) translate([0,0]) {
+                step_h0 = 2.5;
+                step_h1 = step_h0 + 1.5;
+                step_l = 4;
+                
+                mirror([1,0]) {
+                    translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2,2+sleeve_fab_thk);
+                    translate([-step_h0,step_l]) mirror([0,1]) round_step(step_h0,step_h1,step_l,2,2+sleeve_fab_thk);
+                }
+            }
+        }
+    }
+        
+    screw_z = mand_hgt+5 + (bring_btm_hgt+lring_btm_hgt) + (bring_top_hgt-0.6) - 18;
+    
+    translate([0,0,screw_z]) intersection() {
+        translate([0,0,-10]) rotate_extrude($fn=$fn*2) round_step(passage_r,max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15))),10,1,5);
+        
+        hull() {
+            translate([0,0,-25]) cylinder(r=max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15)))-bev_s,h=25,$fn=$fn*2);
+            translate([0,0,-25]) cylinder(r=max((passage_r+(limtab_r-passage_r)/2),(lug_inner_r-(1.5+0.15))),h=25-bev_s,$fn=$fn*2);
+        }
+    }
+            
+    translate([0,0,screw_z]) intersection() {
+        hull() for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),0]) {
+            translate([0,-3,0]) {
+                rotate([0,90,0]) rotate([0,0,90]) rotate_extrude(angle=-22.5) {
+                    translate([3,0]) circle(r=3);
+                    translate([0,-3]) square([3,2*3]);
+                }
+                rotate([-22.5,0,0]) translate([0,3,-50]) cylinder(r=3,h=50);
+            }
+        }
+        
+        union() {
+            hull() for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-25]) {
+                cylinder(r=3-bev_s,h=25);
+                cylinder(r=3,h=25-bev_s);
+            }
+            for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),-25]) {
+                cylinder(r=3,h=25);
+            }
+        }
+        
+        //translate([0,0,-25]) cylinder(r=100,h=25);
+    }
+       
+    for(ia=[0:60:360-60]) rotate([0,0,ia-30]) translate([0,(ia%120==0?(passage_r+(limtab_r-passage_r)/2):(lug_inner_r-(1.5+0.15))),screw_z-0.01]) {
+        hull() for(i=[0,-10]) rotate([i,0,0]) cylinder(r=1.5+0.15,h=18);
+        cylinder(r1=3,r2=0,h=3);
+    }
+}
+
+module sleeve_wedge() {
+    mand_hgt = 25;
+    rib_hgt = /*mand_hgt/2*/ 10;
+    
+    wedge_r0 = sleeve_r2+sleeve_fab_thk/2*cos(sleeve_a);
+    
+    wedge_cr = 0.75;
+    
+    
+    seam_widh_a = (sleeve_seam_widh+5+4)/(2*(wedge_r0-rib_hgt*tan(sleeve_a))*3.14159)*360;
+    seam_rib_ar = [0,sleeve_seam_a[0]+seam_widh_a,sleeve_seam_a[1]+seam_widh_a];
+    seam_rib_ae = [sleeve_seam_a[0]-seam_widh_a,sleeve_seam_a[1]-sleeve_seam_a[0]-2*seam_widh_a,360-sleeve_seam_a[1]-seam_widh_a];
+    
+    intersection() {
+        difference() {
+            union() {
+                rotate_extrude($fn=$fn*2) {
+                    polygon([
+                        [wedge_r0+bev_s*tan(sleeve_a),bev_s],
+                        [wedge_r0+bev_s,0],
+                        
+                        [wedge_r0+2*mand_hgt*tan(sleeve_a)-bev_s,0],
+                        [wedge_r0+2*mand_hgt*tan(sleeve_a)-bev_s*tan(sleeve_a),bev_s],
+                        
+                        [wedge_r0+mand_hgt*tan(sleeve_a)+wedge_cr*cos(sleeve_a),mand_hgt-wedge_cr/sin(sleeve_a)+wedge_cr*sin(sleeve_a)],
+                        [wedge_r0+mand_hgt*tan(sleeve_a),mand_hgt-wedge_cr/sin(sleeve_a)],
+                        [wedge_r0+mand_hgt*tan(sleeve_a)-wedge_cr*cos(sleeve_a),mand_hgt-wedge_cr/sin(sleeve_a)+wedge_cr*sin(sleeve_a)],
+                    ]);
+                    
+                    translate([wedge_r0+mand_hgt*tan(sleeve_a),mand_hgt-wedge_cr/sin(sleeve_a)]) circle(r=wedge_cr);
+                }
+            
+                for(i=[0,1,2]) rotate([0,0,seam_rib_ar[i]]) {
+                    rotate_extrude(angle=seam_rib_ae[i],$fn=$fn*2) {
+                        translate([wedge_r0+rib_hgt*tan(sleeve_a),rib_hgt]) rotate([0,0,-sleeve_a]) translate([0,0]) {
+                            step_h0 = 1;
+                            step_h1 = step_h0 + 1.5;
+                            step_l = 4;
+                            
+                            mirror([1,0]) {
+                                translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2+sleeve_fab_thk,2);
+                                translate([-step_h0,step_l]) mirror([0,1]) round_step(step_h0,step_h1,step_l,2+sleeve_fab_thk,2);
+                            }
+                        }
+                    }
+                }
+                for(j=sleeve_seam_a) for(i=[j-seam_widh_a,j+seam_widh_a]) rotate([0,0,i]) {
+                    translate([wedge_r0+rib_hgt*tan(sleeve_a),0,rib_hgt]) rotate([0,-90+sleeve_a,0]) {
+                        step_h0 = 1;
+                        step_h1 = step_h0 + 1.5;
+                        step_l = 4;
+                        
+                        rotate_extrude() intersection() {
+                            rotate([0,0,90]) translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2+sleeve_fab_thk,2);
+                            translate([0,-step_h0]) square([step_l,step_h1]);
+                        }
+                    }
+                }
+            }
+            
+            for(ia=sleeve_seam_a) rotate([0,0,ia]) {
+                for(j=[0:1/8:1-1/8]) hull() for(i=[j,j+1/8]) {
+                    extra_wh = i*5;
+                    extra_r = sleeve_fab_thk/2 * (1-(sin((i-0.5)*180)+1)/2);
+                    
+                    echo(extra_wh);
+                    
+                    intersection() {
+                        translate([0,-(sleeve_seam_widh+extra_wh),0]) cube([100,2*(sleeve_seam_widh+extra_wh),100]);
+                        
+                        rotate_extrude($fn=$fn*2) polygon([
+                            [0,0],
+                            [wedge_r0+extra_r,0],
+                            [wedge_r0+mand_hgt*tan(sleeve_a)+extra_r,mand_hgt],
+                            [0,mand_hgt],
+                        ]);
+                    }
+                }
+            }
+            
+            rotate_extrude($fn=$fn*2) translate([wedge_r0+2*mand_hgt*tan(sleeve_a)-rib_hgt*tan(sleeve_a),rib_hgt]) rotate([0,0,sleeve_a]) {
+                step_h0 = 1;
+                step_h1 = step_h0 + 1.5;
+                step_l = 4;
+                
+                mirror([1,0]) {
+                    translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2,2+sleeve_fab_thk);
+                    translate([-step_h0,step_l]) mirror([0,1]) round_step(step_h0,step_h1,step_l,2,2+sleeve_fab_thk);
+                }
+            }
+        }
+        
+        
+        rotate([0,0,180]) union() {
+            translate([-200+25,-100,-50]) cube([200,200,200]);
+            for(iy=[0,1]) mirror([0,iy,0]) rotate([90,0,0]) {
+                hull() for(iz=[-bev_s,50]) translate([0,0,1.5+bev_s+iz]) linear_extrude(height=50) {
+                
+                    translate([wedge_r0+mand_hgt*tan(sleeve_a),mand_hgt-wedge_cr/sin(sleeve_a)]) circle(r=max(0.01,wedge_cr+iz));
+                    
+                    translate([wedge_r0+bev_s*tan(sleeve_a)+bev_s*cos((90-sleeve_a)/2),bev_s*sin((90-sleeve_a)/2)]) circle(r=max(0.01,iz));
+                    translate([wedge_r0+2*mand_hgt*tan(sleeve_a)-bev_s*cos((90-sleeve_a)/2),bev_s*sin((90-sleeve_a)/2)]) circle(r=max(0.01,iz));
+                }
+            }
+        }
+    }
+}
+
+module sleeve_collar() difference() {
+    mand_hgt = 25;
+    rib_hgt = /*mand_hgt/2*/ 10;
+    col_r0 = sleeve_r2+sleeve_fab_thk/2*cos(sleeve_a)+2*mand_hgt*tan(sleeve_a)+sleeve_fab_thk*cos(sleeve_a);
+    
+    seam_widh_a = (sleeve_seam_widh+5+4)/(2*(col_r0-rib_hgt*tan(sleeve_a))*3.14159)*360;
+    seam_rib_ar = [0,sleeve_seam_a[0]+seam_widh_a,sleeve_seam_a[1]+seam_widh_a];
+    seam_rib_ae = [sleeve_seam_a[0]-seam_widh_a,sleeve_seam_a[1]-sleeve_seam_a[0]-2*seam_widh_a,360-sleeve_seam_a[1]-seam_widh_a];
+    
+    intersection() {
+        union() {
+            rotate_extrude($fn=$fn*2) {
+                polygon([
+                    [col_r0-bev_s*tan(sleeve_a),bev_s],
+                    [col_r0+bev_s,0],
+                    
+                    [col_r0+3.75-bev_s,0],
+                    [col_r0+3.75,bev_s],
+                    
+                    [col_r0+3.75,mand_hgt-bev_l],
+                    [col_r0+3.75-bev_l,mand_hgt],
+                    
+                    [col_r0-mand_hgt*tan(sleeve_a)+bev_s,mand_hgt],
+                    [col_r0-mand_hgt*tan(sleeve_a)+bev_s*tan(sleeve_a),mand_hgt-bev_s],
+                ]);
+            }
+            for(i=[0,1,2]) rotate([0,0,seam_rib_ar[i]]) {
+                rotate_extrude(angle=seam_rib_ae[i],$fn=$fn*2) {
+                    translate([col_r0-rib_hgt*tan(sleeve_a),rib_hgt]) rotate([0,0,sleeve_a]) {
+                        step_h0 = 1;
+                        step_h1 = step_h0 + 1.5;
+                        step_l = 4;
+                        
+                        mirror([1,0]) {
+                            translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2+sleeve_fab_thk,2);
+                            translate([-step_h0,step_l]) mirror([0,1]) round_step(step_h0,step_h1,step_l,2+sleeve_fab_thk,2);
+                        }
+                    }
+                }
+            }
+            for(j=sleeve_seam_a) for(i=[j-seam_widh_a,j+seam_widh_a]) rotate([0,0,i]) {
+                translate([col_r0-rib_hgt*tan(sleeve_a),0,rib_hgt]) rotate([0,-90-sleeve_a,0]) {
+                    step_h0 = 1;
+                    step_h1 = step_h0 + 1.5;
+                    step_l = 4;
+                    
+                    rotate_extrude() intersection() {
+                        rotate([0,0,90]) translate([-step_h0,-step_l]) round_step(step_h0,step_h1,step_l,2+sleeve_fab_thk,2);
+                        translate([0,-step_h0]) square([step_l,step_h1]);
+                    }
+                }
+            }
+            
+            difference() {
+                r1 = col_r0;
+                col_h = 25;
+                
+                col_thk = 3.75;
+                col_thk2 = col_thk+3.75;
+                
+                union() {
+                    boss_l1 = 5;
+                    boss_l2 = 7.5;
+                    rotate([0,0,-asin(boss_l1/(r1+col_thk))]) rotate_extrude(angle=2*asin(boss_l1/(r1+col_thk))) polygon([
+                        [0,0],
+                        [r1+col_thk2-bev_s,0],
+                        [r1+col_thk2,bev_s],
+                        [r1+col_thk2,col_h-bev_l],
+                        [r1+col_thk2-bev_l,col_h],
+                        [0,col_h],
+                    ]);
+                    for(iy=[0,1]) mirror([0,iy,0]) rotate([0,0,-asin((boss_l1+boss_l2)/(r1+col_thk))])  round_step_on_rad(r1+col_thk,r1+col_thk2,asin(boss_l2/(r1+col_thk)),5,5,col_h,bev_s,bev_l);
+                }
+                translate([0,0,-0.01]) cylinder(r=r1+col_thk-bev_l-0.01,h=50);
+            }
+        }
+        
+        union() {
+            translate([-200+25,-100,-50]) cube([200,200,200]);
+            for(iy=[0,1]) mirror([0,iy,0]) rotate([90,0,0]) {
+                hull() for(iz=[-bev_l,50]) translate([0,0,1.5+bev_l+iz]) linear_extrude(height=50) hull() {
+                
+                    r1 = col_r0;
+                    col_h = 25;
+                    col_thk = 3.75;
+                    col_thk2 = col_thk+3.75;
+                
+                    for(point=[
+                        [r1-iz,-iz],
+                        [r1-iz-col_h*tan(glove_a),col_h+iz],
+                        [r1+iz+col_thk2,col_h+iz],
+                        [r1+iz+col_thk2,-iz],
+                    ]) {
+                        translate(point) circle(r=0.01);
+                    }
+                }
+            }
+        }
+    }
+    
+            
+    for(ia=sleeve_seam_a) rotate([0,0,ia]) {
+        for(j=[0:1/8:1-1/8]) hull() for(i=[j,j+1/8]) {
+            extra_wh = i*5;
+            extra_r = sleeve_fab_thk/2 * (1-(sin((i-0.5)*180)+1)/2);
+            
+            echo(extra_wh);
+            
+            intersection() {
+                translate([0,-(sleeve_seam_widh+extra_wh),0]) cube([100,2*(sleeve_seam_widh+extra_wh),100]);
+                
+                rotate_extrude($fn=$fn*2) polygon([
+                    [0,0],
+                    [col_r0+extra_r,0],
+                    [col_r0-mand_hgt*tan(sleeve_a)+extra_r,mand_hgt],
+                    [0,mand_hgt],
+                ]);
+            }
+        }
+    }
+    
+    
+    r1 = col_r0;
+    col_h = 25;
+    col_thk = 3.75;
+    col_thk2 = col_thk+3.75;
+                    
+    for(iz=[0.25,0.75]*col_h) translate([r1+col_thk2/2,0,iz]) rotate([-90,0,0]) {
+        translate([0,0,-50]) hull() cylinder_oh(1.5+0.15,100);
+        
+        hull() for(ib=[0,bev_xs]) translate([0,0,5+(bev_xs-ib)]) {
+            cylinder(r=3-ib,h=100);
+            translate([20,0,0]) cylinder(r=3-ib,h=100);
+            translate([20,-20*tan(30),0]) cylinder(r=3-ib,h=100);
+        }
+        
+        mirror([0,0,1]) hull() for(ib=[0,bev_xs]) translate([0,0,5+(bev_xs-ib)]) {
+            for(ia=[0:60:360-60]) rotate([0,0,ia+30]) translate([2.75/cos(30),0,0]) {
+                cylinder(r=max(0.01,0.2-ib),h=100);
+            }
+            
+            translate([20,0,0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
+            translate([20,-20*tan(30),0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
+        }
+    }
+}
+
+module sleeve_cs() {
+
+    
+
+}
 
 *union() {
-    translate([0,0,-sleeve_c12h]) union() {
+    *translate([0,0,(-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt)-sleeve_c12h]) union() {
         cylinder(r1=sleeve_r1,r2=sleeve_r2,h=sleeve_c12h);
     }
     
-    translate([0,0,0]) union() {
+    *translate([0,0,0]) union() {
         cylinder(r1=glove_r1,r2=glove_r2,h=glove_c12h);
+    }
+    translate([sleeve_r2-sleeve_fab_thk/2,0]) {
+        circle(r=sleeve_fab_thk/2);
+        translate() circle(r=sleeve_fab_thk/2);
     }
 }
 
 
-*translate([0,0,(-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt)-(25+2.75+5)]) {
-    sleeve_mandril();
-    sleeve_collar();
+*difference() {
+    translate([0,0,(-(bring_btm_hgt+lring_btm_hgt)-bring_top_hgt)-(25+2.75+5)]) {
+        *sleeve_mandril();
+        sleeve_collar();
+    }
+    *translate([0,0,-0.01]) cube([200,200,200]);
 }
 
 *difference() {
@@ -373,7 +734,7 @@ module glove_mandril() difference() {
 
 
 
-
+/*
 module sleeve_mandril() difference() {
     fab_thk = 1;
     rim_r = 2.75;
@@ -461,9 +822,9 @@ module sleeve_mandril_screw_co() {
 
 
 module sleeve_collar() difference() {
-    fab_thk = 1;
-    rim_r = 2.75-fab_thk;
-    col_h = 25;
+    fab_thk = 1.5;
+    rim_r = 2.0-fab_thk;
+    col_h = 30;
 
     r1 = sleeve_r2 + fab_thk*cos(sleeve_a);
     rc = r1 + rim_r/cos(sleeve_a) + col_h*tan(sleeve_a);
@@ -495,7 +856,7 @@ module sleeve_collar() difference() {
             }
         }
         
-        union() {
+        *union() {
             translate([-200+25,-100,-50]) cube([200,200,200]);
             for(iy=[0,1]) mirror([0,iy,0]) rotate([90,0,0]) hull() {
                 translate([0,0,1.5]) linear_extrude(height=50) hull() {
@@ -513,31 +874,8 @@ module sleeve_collar() difference() {
     }
     
     //translate([0,0,-0.01]) cube([200,200,200]);
-    
-    hull() for(ix=[0,100]) translate([ix,0,-10]) cylinder(r=1.5,h=100);
-        
-    for(iz=[max_bolt_h,max_bolt_h-6]) translate([rc,0,iz]) rotate([-90,0,0]) {
-        translate([0,0,-50]) hull() cylinder_oh(1.5+0.15,100);
-    }
-    hull() for(iz=[max_bolt_h,max_bolt_h-6]) translate([rc,0,iz]) rotate([-90,0,0]) {
-        for(ib=[0,0.2]) translate([0,0,10+(0.2-ib)]) {
-            cylinder(r=3-ib,h=100);
-            translate([20,0,0]) cylinder(r=3-ib,h=100);
-            translate([20,-20*tan(45),0]) cylinder(r=3-ib,h=100);
-        }
-    }
-    mirror([0,1,0]) hull() for(iz=[max_bolt_h,max_bolt_h-6]) translate([rc,0,iz]) rotate([-90,0,0]) {
-        for(ib=[0,0.2]) translate([0,0,10+(0.2-ib)]) {
-            for(ia=[0:60:360-60]) rotate([0,0,ia]) translate([2.75/cos(30),0,0]) {
-                cylinder(r=max(0.01,0.2-ib),h=100);
-            }
-            
-            translate([20,0,0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
-            translate([20,-20*tan(45),0]) cylinder(r=2.75/cos(30)+0.2-ib,h=100);
-        }
-    }
 }
-
+*/
 
 
 
