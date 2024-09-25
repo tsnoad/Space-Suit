@@ -1,7 +1,8 @@
 
-use <PLSS.scad>;
+use <PLSS Torso Shared Modules.scad>;
+//use <PLSS.scad>;
 
-$fn = 72;
+$fn = 36;
 
 //translate([-15,-20,-780]) {
 *intersection() {
@@ -48,12 +49,12 @@ bev_s = 0.5; //bevel
 *neck_spacer([0,120,240]);
 *neck_spacer([0]);
 
-shoulder_yoke();
+!shoulder_yoke();
 *mirror([1,0,0]) shoulder_yoke();
 *neck_spacer_front();
 *neck_spacer_back();
 
-back_upper2();
+*back_upper2();
 *back_upper();
 *back_mid();
 *back_lower();
@@ -116,7 +117,7 @@ back_upper2();
 *rotate([15+15,0,0]) neck_spacer_front();
 *rotate([-15,0,0]) neck_spacer_back();
 
-!rotate([asin(75/back_rad),0,0]) back_upper2();
+*rotate([asin(75/back_rad),0,0]) back_upper2();
 *rotate([180+asin(75/back_rad),0,0]) back_upper();
 *rotate([-15,0,0]) back_mid();
 *rotate([-90-15,0,0]) back_lower();
@@ -127,24 +128,7 @@ back_upper2();
     translate([50,10,0]) web_mount(strap_wid-2*7.5,[-0.5,0,0.5]);
 }
 
-module torso_plss_stud_plane(inc_rot=true) {
-    translate([0,-(back_dep-5),0]) rotate([(inc_rot?1:0)*15,0,0]) children();
-}
 
-module torso_plss_port_plane(inc_rot=true,z_offset=0) {
-    //crit_angle = 90 - (atan((back_hgt2-should_rad)/(back_rad-back_dep)) - asin(30/back_rad) + acos(back_rad/(back_rad+5))); //this is the angle of the flat section of the back (from the -y axis)
-    
-    //plane_angle = min(crit_angle, asin((back_hgt-60)/(back_rad+outset)));
-    plane_angle = asin((back_hgt-strap_wid*sin(25)-60+z_offset)/(back_rad+outset+10));
-    
-    
-    plane_y = (back_rad-back_dep) - (back_rad+outset+10)*cos(plane_angle);
-    plane_z = -back_hgt + strap_wid*sin(25) + (back_rad+outset+10)*sin(plane_angle);
-    
-    translate([0,plane_y,plane_z]) {
-        rotate([90-(inc_rot?1:0)*plane_angle,0,0]) children();
-    }
-}
 
 module torso_plss_port_pos() {
     intersection() {
@@ -1740,8 +1724,3 @@ module back_mid() difference() {
 
 
 
-
-module cylinder_oh(radius,height) {
-    cylinder(r=radius,h=height);
-    translate([-radius*tan(22.5),-radius,0]) cube([2*radius*tan(22.5),2*radius,height]);
-}
