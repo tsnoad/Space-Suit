@@ -275,7 +275,7 @@ module int_c_segment() {
     //C segment
     intersection() {
         trans_bc_seam() translate([0,-200-flange_wid/2,-200]) cube([1000,200,250]);
-        translate([0,-500,-back_hgt]) cube([1000,500,500]);
+        trans_cd_seam() translate([0,-500,flange_wid/2]) cube([1000,500,500]);
     }
     
     //fillet
@@ -286,7 +286,7 @@ module int_c_segment() {
         trans_bc_seam() translate([0,-200-flange_wid/2+ib,-200]) cube([1000,200,250]);
         
         //C-D flange
-        *translate([0,-500,-back_hgt-ib]) cube([1000,500,500]);
+        trans_cd_seam() translate([0,-500,flange_wid/2-ib]) cube([1000,500,500]);
     }
     
     intersection() {
@@ -295,17 +295,22 @@ module int_c_segment() {
         //B-C flange
         trans_bc_seam() translate([0,-200+flange_wid/2,-200]) cube([1000,200,250]);
         //C-D flange
-        translate([0,-500,-back_hgt-15]) cube([1000,500,500]);
+        trans_cd_seam() translate([0,-500,-flange_wid/2]) cube([1000,500,500]);
     }
+}
+
+
+module trans_cd_seam() {
+    translate([0,0,-back_hgt]) children();
 }
 
 module int_d_segment() {         
     //D segment
     difference() {
-        translate([0,-500,-500-back_hgt]) cube([1000,500,500]);
+        trans_cd_seam() translate([0,-500,-500+flange_wid/2-0.2]) cube([1000,500,500]);
         hull() for(ib=[0,2.4]) intersection() {
             translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
-            translate([-500,-500,-back_hgt-15-ib]) cube([1000,500,500]);
+            trans_cd_seam() translate([0,-500,-flange_wid/2-ib]) cube([1000,500,500]);
         }
     }
 }
@@ -328,7 +333,7 @@ module screw_locations(only_index=undef) {
     //C-D screws
     cd_index = [4,5,6];
     cd_ix = [30,120+5-15,120+5-50];
-    translate([0,(back_rad-back_dep),-back_hgt-15/2]) {
+    trans_cd_seam() translate([0,(back_rad-back_dep),0]) {
         x_crit = (should_widh-back_hgt*tan(should_ang));
     
         for(i=[0]) if(only_index==undef || only_index==cd_index[i]) if(cd_ix[i]<x_crit) translate([cd_ix[i],0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
