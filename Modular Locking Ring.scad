@@ -212,7 +212,7 @@ module locking_ring_top() union() {
     difference() {
         union() {
             cylinder_bev(r_outer,hgt1,bev_xs,bev_l);
-            rotate([0,0,-30]) locking_ring_latch_prot(hgt1,bev_xs,bev_l);
+            rotate([0,0,-30]) if(latch) locking_ring_latch_prot(hgt1,bev_xs,bev_l);
         }
             
         intersection() {
@@ -246,7 +246,7 @@ module locking_ring_top() union() {
         
         children();
         
-        rotate([0,0,-30]) latch_datum_from_origin() {
+        rotate([0,0,-30]) if(latch) latch_datum_from_origin() {
             cylinder_neg_bev(1.5+0.15,hgt1-2,bev_xs,bev_xs);
             
             translate([0,0,hgt1-2+bev_s]) for(ia=[0,45]) rotate([0,0,-90+ia]) cylinder_neg_bev(4,2-bev_s,0,bev_s,[0,10]);
@@ -298,7 +298,7 @@ module locking_ring_bottom() union() {
     difference() {
         union() {
             cylinder_bev(r_outer,hgt2,bev_l,bev_xs,$fn=$fn*2);
-            rotate([0,0,-30]) locking_ring_bottom_latch_prot_pos();
+            rotate([0,0,-30]) if(latch) locking_ring_bottom_latch_prot_pos();
         }
         
         rotate([0,0,-limtab_a_offs-limtab_a_trav/2]) intersection() {
@@ -336,7 +336,7 @@ module locking_ring_bottom() union() {
         translate([0,0,hgt2-bev_xs]) cylinder_bev(r_intrm1+bev_xs,50,bev_xs,0);
         cylinder_neg_bev(r_inner,hgt1,bev_s,bev_s);
         
-        rotate([0,0,-30]) locking_ring_bottom_latch_prot_neg();
+        rotate([0,0,-30]) if(latch) locking_ring_bottom_latch_prot_neg();
         
         children();
         
@@ -360,7 +360,7 @@ module locking_ring_bottom() union() {
         }*/
     }
     
-    rotate([0,0,-30]) locking_ring_bottom_latch_prot_pos2();
+    rotate([0,0,-30]) if(latch) locking_ring_bottom_latch_prot_pos2();
         
     rotate([0,0,-limtab_a_offs-limtab_a_trav/2]) {
         for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num]) {
@@ -605,14 +605,13 @@ module base_ring_top() {
         }
         translate([0,0,hgt2-bev_s]) cylinder(r1=lug_inner_r+clr_h,r2=lug_inner_r+clr_h+50,h=50,$fn=$fn*2);
         
-        
         cylinder_neg_bev(passage_r,hgt1,bev_xs,bev_l);
         
         children();
         
-        base_ring_top_latch_neg();
+       if(latch) base_ring_top_latch_neg();
     }
-    base_ring_top_latch_pos();
+    if(latch) base_ring_top_latch_pos();
     
     difference() {
         rotate_extrude() polygon([
@@ -635,24 +634,25 @@ module base_ring_top_latch_neg() {
     
     crn_r_xs = 0.5;
     
+    clr_latch = clr_h_s;
     
     intersection() {
         translate([latch_piv_r,0,0]) rotate_extrude($fn=$fn*2) polygon([
-            [latch_inner_r-clr_h-bev_s,-0.01],
-            [latch_inner_r-clr_h,bev_s],
-            [latch_inner_r-clr_h,hgt2-bev_s],
-            [latch_inner_r-clr_h-bev_s,hgt2+0.01],
+            [latch_inner_r-clr_latch-bev_s,-0.01],
+            [latch_inner_r-clr_latch,bev_s],
+            [latch_inner_r-clr_latch,hgt2-bev_s],
+            [latch_inner_r-clr_latch-bev_s,hgt2+0.01],
             
-            [latch_outer_r+clr_h+bev_s,hgt2+0.01],
-            [latch_outer_r+clr_h,hgt2-bev_s],
-            [latch_outer_r+clr_h,bev_s],
-            [latch_outer_r+clr_h+bev_s,-0.01],
+            [latch_outer_r+clr_latch+bev_s,hgt2+0.01],
+            [latch_outer_r+clr_latch,hgt2-bev_s],
+            [latch_outer_r+clr_latch,bev_s],
+            [latch_outer_r+clr_latch+bev_s,-0.01],
         ]);
         rotate_extrude(angle=90,$fn=$fn*4) polygon([
-            [latch_tab_r-clr_h-bev_s,-0.01],
-            [latch_tab_r-clr_h,bev_s],
-            [latch_tab_r-clr_h,hgt2-bev_s],
-            [latch_tab_r-clr_h-bev_s,hgt2+0.01],
+            [latch_tab_r-clr_latch-bev_s,-0.01],
+            [latch_tab_r-clr_latch,bev_s],
+            [latch_tab_r-clr_latch,hgt2-bev_s],
+            [latch_tab_r-clr_latch-bev_s,hgt2+0.01],
             
             [50,hgt2+0.01],
             [50,-0.01],
@@ -660,8 +660,8 @@ module base_ring_top_latch_neg() {
     }
     
     linear_extrude(height=50) {
-        latch_corner_diamond(lug_outer_r-crn_r_xs,latch_inner_r-clr_h-crn_r_xs,2,2);
-        latch_corner_diamond(lug_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs,2,-2);
+        latch_corner_diamond(lug_outer_r-crn_r_xs,latch_inner_r-clr_latch-crn_r_xs,2,2);
+        latch_corner_diamond(lug_outer_r-crn_r_xs,latch_outer_r+clr_latch+crn_r_xs,2,-2);
     }
 }
 
@@ -670,8 +670,10 @@ module base_ring_top_latch_pos() {
     
     crn_r_xs = 0.5;
     
-    translate(latch_corner_loc(lug_outer_r-crn_r_xs,latch_inner_r-clr_h-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
-    translate(latch_corner_loc(lug_outer_r-crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+    clr_latch = clr_h_s;
+    
+    translate(latch_corner_loc(lug_outer_r-crn_r_xs,latch_inner_r-clr_latch-crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
+    translate(latch_corner_loc(lug_outer_r-crn_r_xs,latch_outer_r+clr_latch+crn_r_xs)) cylinder_bev(crn_r_xs,hgt2,bev_s,bev_s);
     
     difference() {
         linear_extrude(height=hgt2) {
@@ -679,8 +681,8 @@ module base_ring_top_latch_pos() {
             latch_corner_diamond(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs,-2.5,4.5);
         }
         
-        translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_inner_r+crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_h,hgt2,bev_s,bev_s);
-        translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_h,hgt2,bev_s,bev_s);
+        translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_inner_r+crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_latch,hgt2,bev_s,bev_s);
+        translate(latch_corner_loc(latch_tab_r+crn_r_xs,latch_outer_r-crn_r_xs)) cylinder_neg_bev(crn_r_xs+clr_latch,hgt2,bev_s,bev_s);
     }
 }
 
@@ -798,7 +800,7 @@ module latch() latch_datum_from_origin() {
     crn_r_xs = 0.5;
     crn_r_s = 1;
     
-    rotate([0,0,-1*1*latch_unlck_rot]) {
+    rotate([0,0,-1*0*latch_unlck_rot]) {
         //locking tab
         difference() {
             intersection() {
