@@ -35,77 +35,440 @@ bev_s = 0.5; //bevel
 flange_wid = 15;
 
 
-//torso_assmbly();
+*torso_assmbly() translate([-500,-500,-500]) cube([1000,1000,1000]);
 
 //torso_assmbly() int_a_segment();
 //torso_assmbly() int_b_segment();
-torso_assmbly() int_c_segment();
+//torso_assmbly() translate([0,0,-8*cos(should_ang)]) for(ixm=[0,1]) mirror([ixm,0,0]) int_c_segment();
+//torso_assmbly() translate([0,0,-8*cos(should_ang)]) int_c_segment();
+torso_assmbly() translate([0,0,-8*cos(should_ang)]) mirror([1,0,0]) int_c_segment();
+
+!lateral_joining_tab();
 
 module torso_assmbly() difference() {
     intersection() {
         union() {
-            translate([0,0,-8*cos(should_ang)]) hull() {
-                intersection() {
-                    torso_shape(8-0.8,false,0);
-                    torso_shape_intersect(0);
+            translate([0,0,-8*cos(should_ang)]) {
+                hull() {
+                    intersection() {
+                        torso_shape(8-0.8,false,0);
+                        torso_shape_intersect(0);
+                    }
+                    intersection() {
+                        torso_shape(8,false,0.8);
+                        torso_shape_intersect(0.8);
+                    }
                 }
+            
+                //plss upper interface
+                hull() for(ia=[0:7.5:45]) {
+                    intersection() {
+                        plss_torso_portcrn_location(false) rotate([90,0,0]) cylinder(r=10+5*sin(ia)+(ia==45?50:0),h=200);
+                        torso_plss_port_plane() translate([0,0,-100-(5-5*cos(ia)+(ia==45?50:0))]) cylinder(r=150,h=100);
+                    }
+                }
+                
+                //PLSS upper - outer protrusions for ventilation tubes
+                //inlet to helmet
+                hull() for(ib=[0,10]) intersection() {
+                    torso_shape((15-ib));
+                    hull() for(iz=[0,60]) translate([20+15,0,-60+iz]) rotate([90,0,0]) cylinder(r=5+5*tan(22.5)+ib+5*tan(22.5),h=200);
+                }
+                //merge these protrusions to prevent ridges
+                //protrusions to right
+                for(ixm=[0,1]) hull() for(ib=[0,10]) intersection() {
+                    torso_shape((15-ib));
+                    hull() {
+                        //inlet - starts on right
+                        translate([20+15,0,-60-5]) rotate([0,17.5,0]) hull() for(ix=[0,200]) translate([ix,0,0]) rotate([90,0,0]) cylinder(r=5*tan(22.5)+ib+5*tan(22.5),h=200);
+                        //outlet - starts on left
+                        translate([-(20+15),0,-60]) mirror([0,0,0]) rotate([0,17.5,0]) hull() for(ix=[0,200]) translate([ix,0,0]) rotate([90,0,0]) cylinder(r=5+5*tan(22.5)+ib+5*tan(22.5),h=200);
+                    }
+                }
+                //protrusions to left
+                for(ixm=[0,1]) hull() for(ib=[0,10]) intersection() {
+                    torso_shape((15-ib));
+                    hull() {
+                        //inlet - starts on right
+                        translate([20+15,0,-60-5]) mirror([1,0,0]) rotate([0,17.5,0]) hull() for(ix=[0,200]) translate([ix,0,0]) rotate([90,0,0]) cylinder(r=5*tan(22.5)+ib+5*tan(22.5),h=200);
+                        //outlet - starts on left
+                        translate([-(20+15),0,-60]) mirror([1,0,0]) rotate([0,17.5,0]) hull() for(ix=[0,200]) translate([ix,0,0]) rotate([90,0,0]) cylinder(r=5+5*tan(22.5)+ib+5*tan(22.5),h=200);
+                    }
+                }
+                    
+            
+                //plss lower interface
                 intersection() {
-                    torso_shape(8,false,0.8);
-                    torso_shape_intersect(0.8);
+                    plss_torso_stud_location() {
+                        hull() for(ia=[0:7.5:45]) {
+                            difference() {
+                                rotate([90,0,0]) cylinder(r=10+5*sin(ia)+(ia==45?50:0),h=100+100);
+                                torso_plss_stud_plane() translate([-100,-200,-100]) cube([200,200+(5-5*cos(ia)+(ia==45?50:0)),200]);
+                            }
+                        }
+                    }
+                    torso_shape_intersect();
                 }
             }
+        
             
             //conical flange
-            translate([0,0,/*(sqrt(pow(120+5,2)+pow(40,2))-(120+5))*/7.5]) {
-                rotate([-15,0,0]) translate([0,40,0]) hull() {
-                    trans1() cylinder(r1=120+5+200*tan(15),r2=120+5,h=200,$fn=$fn*2);
-                    trans1() hull() {
-                        cylinder(r=120+5,h=200,$fn=$fn*2);
-                        cylinder(r=120+5-50/tan(25),h=200+50,$fn=$fn*2);
-                    }
-                    //extra fillet on sides of flange so we can print B segment in the required orientation
-                    trans1() hull() {
-                        cylinder(r1=120+5,r2=120+5,h=200,$fn=$fn*2);
-                        translate([-200,0,0]) cylinder(r1=120+5,r2=120+5,h=0.01,$fn=$fn*2);
-                        translate([200,0,0]) cylinder(r1=120+5,r2=120+5,h=0.01,$fn=$fn*2);
-                    }
-                }
-            }
-            
-            //plss upper interface
-            
-            //plss lower interface
-            *intersection() {
-                plss_torso_stud_location() {
-                    hull() for(ia=[0:7.5:45]) {
-                        difference() {
-                            rotate([90,0,0]) cylinder(r=10+5*sin(ia)+(ia==45?50:0),h=100+100);
-                            torso_plss_stud_plane() translate([-100,-200,-100]) cube([200,200+(5-5*cos(ia)+(ia==45?50:0)),200]);
+            hull() for(ib=[0,0.8]) intersection() {
+                translate([0,0,/*(sqrt(pow(120+5,2)+pow(40,2))-(120+5))*/7.5-ib]) {
+                    rotate([-15,0,0]) translate([0,40,0]) hull() {
+                        trans1() cylinder(r1=120+5+200*tan(15),r2=120+5,h=200,$fn=$fn*2);
+                        trans1() hull() {
+                            cylinder(r=120+5,h=200,$fn=$fn*2);
+                            cylinder(r=120+5-50/tan(25),h=200+50,$fn=$fn*2);
+                        }
+                        //extra fillet on sides of flange so we can print B segment in the required orientation
+                        trans1() hull() {
+                            cylinder(r1=120+5,r2=120+5,h=200,$fn=$fn*2);
+                            translate([-200,0,0]) cylinder(r1=120+5,r2=120+5,h=0.01,$fn=$fn*2);
+                            translate([200,0,0]) cylinder(r1=120+5,r2=120+5,h=0.01,$fn=$fn*2);
                         }
                     }
                 }
-                translate([0,0,-8*cos(should_ang)]) torso_shape_intersect();
+                translate([-(should_wid_true-(0.8-ib)),-500,-500]) cube([2*(should_wid_true-(0.8-ib)),1000,1000]);
             }
         }
         
-        translate([0,0,-8*cos(should_ang)]) torso_shape_intersect();
         
+        translate([0,0,-8*cos(should_ang)]) torso_shape_intersect();
+            
         //intersections to create segments
         children();
     }
     
-    //cutout the inside
-    translate([0,0,-8*cos(should_ang)]) torso_shape(0,true);
-    
-    //inside bevel on sides
-    for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,0,-8*cos(should_ang)]) hull() {
-        intersection() {
-            torso_shape(0,true,0);
-            translate([should_wid_true-1,-500,-500]) cube([500,1000,1000]);
+    translate([0,0,-8*cos(should_ang)]) {
+        //cutout the inside
+        torso_shape(0,true);
+        
+        //inside bevel on sides
+        for(ixm=[0,1]) mirror([ixm,0,0]) hull() {
+            intersection() {
+                torso_shape(0,true,0);
+                translate([should_wid_true-1,-500,-500]) cube([500,1000,1000]);
+            }
+            intersection() {
+                torso_shape(1,true,-1);
+                translate([should_wid_true,-500,-500]) cube([500,1000,1000]);
+            }
         }
-        intersection() {
-            torso_shape(1,true,-1);
-            translate([should_wid_true,-500,-500]) cube([500,1000,1000]);
+        
+        //cutout recesses for tabs joining lateral sides
+        union() {
+            //tab recess in A segment
+            *hull() for(ib=[0,2.4]) intersection() {
+                torso_shape((2.4-ib));
+                hull() for(ixm=[0,1]) mirror([ixm,0,0]) rotate([-75,0,0]) {
+                    for(iz=[0,-35]) translate([7.5,135+iz,-50]) rotate([0,0,90]) cylinder_oh(7.5+ib,250);
+                }
+            }
+            //tab recess in C segment
+            hull() for(ib=[0,2.4]) intersection() {
+                torso_shape((2.4-ib));
+                hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
+                    rotate([-10,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,back_rad+8+10);
+                    rotate([asin((-8*cos(should_ang)-7.5-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,250);
+                }
+            }
+            
+            //tab recess in D segment
+            *hull() for(ib=[0,2.4]) intersection() {
+                torso_shape((2.4-ib));
+                hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
+                    rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,200);
+                    rotate([15,0,0]) translate([7.5,0,-125]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,200);
+                }
+            }
+        }
+        
+        //PLSS lower stud bolt cutouts
+        union() {
+            plss_torso_stud_location() {
+                rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(3+0.2,100+100);
+                
+                torso_plss_stud_plane(false) translate([0,100+5,0]) hull() {
+                    rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(6+0.2-bev_s,100);
+                    rotate([90,0,0]) translate([0,0,-bev_s]) rotate([0,0,90]) hull() cylinder_oh(6+0.2,100);
+                }
+                
+                hull() for(ib=[0,0.5]) difference() {
+                    rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(3+0.2+ib,200);
+                    torso_plss_stud_plane() translate([-100,(0.5-ib),-100]) cube([200,200,200]);
+                }
+            }
+            for(ixm=[0,1]) mirror([ixm,0,0]) hull() for(ib=[0,bev_s]) intersection() {
+                torso_shape((bev_s-ib));
+                plss_torso_stud_location(false) {
+                    rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(6+0.2+ib,100+100);
+                }
+            }
+        }
+        
+        //PLSS upper interface cutouts
+        union() {
+            //bolt holes
+            plss_torso_portcrn_location(false) {
+                rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(3+0.2,200);
+            }
+            //cutouts for nuts
+            for(ix2=[-1,1]*(20+15)) translate([ix2,0,0]) {
+                for(ix=[-15,15]) for(iz=[-15,15]) translate([ix,0,0]) {
+                    torso_plss_port_plane(false,iz) translate([0,0,-100-5-2]) hull() rotate([0,0,90]) {
+                        cylinder_oh(3+0.2,100+3);
+                        cylinder_oh(6+0.2,100);
+                    }
+                }
+            }
+            
+            //main port holes
+            plss_torso_port_location(false) {
+                rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(12.5,200);
+            }  
+            for(ix2=[-1,1]*(20+15)) hull() for(ib=[0,bev_s]) intersection() {
+                translate([0,0,-60]) translate([ix2,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(12.5+ib,200);
+                torso_plss_port_plane() translate([0,0,-100-5-2-2+(bev_s-ib)]) cylinder(r=150,h=100);
+            }
+            
+            torso_plss_port_plane() {
+                //recess for interface plate
+                hull() for(iz=[0,-2]) for(ix=[-1,1]*(20+15+15+(2+iz))) for(iy=[-1,1]*15/cos(asin((back_hgt-strap_wid*sin(25)-60)/(back_rad+8+10)))) translate([ix,iy,iz]) cylinder(r=5+0.4+2.5,h=100);
+                hull() for(iz=[0,-bev_s]) for(ix=[-1,1]*(20+15+15+2-bev_s)) for(iy=[-1,1]*15/cos(asin((back_hgt-strap_wid*sin(25)-60)/(back_rad+8+10)))) translate([ix,iy,iz]) cylinder(r=5+0.4+2.5+(bev_s+iz),h=100);
+                
+                //screw holes to mount interface plate
+                for(ix=[-1,1]*(7.5)) for(iy=[-1,1]*15) translate([ix,iy,0]) {
+                    translate([0,0,-6]) hull() rotate([0,0,90]) {
+                        cylinder_oh(1.25-0.5,50);
+                        translate([0,0,0.5]) cylinder_oh(1.25,50);
+                    }
+                    translate([0,0,-2]) hull() rotate([0,0,90]) {
+                        cylinder_oh(1.25+bev_s,50);
+                        translate([0,0,-bev_s]) cylinder_oh(1.25,50);
+                    }
+                }
+            }
+                
+            //interior recess
+            hull() for(ia=[0:7.5:45]) {
+                intersection() {
+                    plss_torso_portcrn_location(false) rotate([90,0,0]) cylinder(r=5+5*sin(ia)+(ia==45?50:0)+5*tan(22.5),h=200);
+                    torso_plss_port_plane() translate([0,0,-100-5-2-2-(5-5*cos(ia)+(ia==45?50:0))]) cylinder(r=150,h=100);
+                }
+            }
+            
+            //inlet to helmet
+            hull() for(ib=[0,10]) intersection() {
+                torso_shape((10-ib),true);
+                hull() for(iz=[0,200]) translate([20+15,0,-60+iz]) rotate([90,0,0]) cylinder(r=5+5*tan(22.5)+ib,h=200);
+                torso_plss_port_plane() translate([0,0,-100-5-2-2]) cylinder(r=150,h=100);
+            }
+            //inlet to sleeve
+            for(ixm=[0,1]) hull() for(ib=[0,10]) intersection() {
+                torso_shape((10-ib),true);
+                translate([20+15,0,-60-5]) mirror([ixm,0,0]) rotate([0,17.5,0]) hull() for(ix=[0,200]) translate([ix,0,0]) rotate([90,0,0]) cylinder(r=5*tan(22.5)+ib,h=200);
+                torso_plss_port_plane() translate([0,0,-100-5-2-2]) cylinder(r=150,h=100);
+            }
+            //outlets
+            for(ixm=[0,1]) hull() for(ib=[0,10]) intersection() {
+                torso_shape((10-ib),true);
+                translate([-(20+15),0,-60]) mirror([ixm,0,0]) rotate([0,17.5,0]) hull() for(ix=[0,200]) translate([ix,0,0]) rotate([90,0,0]) cylinder(r=5+5*tan(22.5)+ib,h=200);
+                torso_plss_port_plane() translate([0,0,-100-5-2-2]) cylinder(r=150,h=100);
+            }
+            //some holes for zip ties
+            //inlet to helmet
+            for(iz=[35]) for(ix2=[-10,10]) translate([20+15+ix2,0,-60+iz]) rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(2,200);
+            //inlet to sleeve
+            for(ixm=[0,1]) {
+                translate([20+15,0,-60-5]) mirror([ixm,0,0]) rotate([0,17.5,0]) for(ix=[70]+[1]*ixm*2*(20+15)) for(ix2=[-5,5]) translate([ix,0,ix2]) rotate([90,0,0]) hull() rotate([0,0,90+17.5]) cylinder_oh(2,200);
+            }
+            //outlets
+            for(ixm=[0,1]) {
+                translate([-(20+15),0,-60]) mirror([ixm,0,0]) rotate([0,17.5,0]) for(ix=[60]+[1]*(1-ixm)*2*(20+15)) for(ix2=[-10,10]) translate([ix,0,ix2]) rotate([90,0,0]) hull() rotate([0,0,90+17.5]) cylinder_oh(2,200);
+            }
+        }
+        
+        //cutout screw holes
+        union() {
+            for(ixm=[0,1]) mirror([ixm,0,0]) union() {
+                intersection() {
+                    torso_shape(8-1.6);
+                    for(ii=[0:14]) screw_locations(ii) hull() cylinder_oh(1.25,250);
+                }
+                intersection() {
+                    torso_shape(2.4+0.01);
+                    for(ii=[0:14]) screw_locations(ii) hull() cylinder_oh(1.5+0.15,250);
+                }
+                for(ii=[0:14]) hull() {
+                    intersection() {
+                        torso_shape(0);
+                        screw_locations(ii) cylinder_oh(3,250);
+                    }
+                    intersection() {
+                        torso_shape(3-0.5);
+                        screw_locations(ii) cylinder_oh(0.5,250);
+                    }
+                }
+            }
+        }
+        
+        //cutout holes for shock cord on back
+        *for(ix=[0,1]) mirror([ix,0,0]) for(iz=[0,20,40]) {
+            translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                    translate([-iz*sin(15),0,(40-iz)*cos(15)]) rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(3,200);
+                }
+            }
+            
+            //inside bevel
+            hull() for(ib=[0,bev_s]) intersection() {
+                torso_shape(2+(bev_s-ib));
+                translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                    rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                        translate([-iz*sin(15),0,(40-iz)*cos(15)]) rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(3+ib,200);
+                    }
+                }
+            }
+            
+            //outside bevel
+            hull() for(ib=[0,bev_s]) difference() {
+                translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                    rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                        translate([-iz*sin(15),0,(40-iz)*cos(15)]) rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(3+ib,200);
+                    }
+                }
+                torso_shape(8-2-(bev_s-ib));
+            }
+            
+            //inside recess for knot
+            hull() for(ib=[0,2]) intersection() {
+                torso_shape((2-ib));
+                translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                    rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                        translate([-iz*sin(15),0,(40-iz)*cos(15)]) rotate([90,0,0]) cylinder(r=5+ib,h=200);
+                    }
+                }
+            }
+            
+            //inside recess channels
+            hull() for(ib=[0,2]) intersection() {
+                torso_shape((2-ib));
+                translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                    rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                        translate([-iz*sin(15),0,(40-iz)*cos(15)]) hull() for(ix2=[0,50]) rotate([0,15,0]) translate([ix2,0,0]) {
+                            rotate([90,0,0]) cylinder(r=3+ib,h=200);
+                        }
+                    }
+                }
+            }
+            
+            //outside recess for knot
+            difference() {
+                hull() for(ib=[0,2]) difference() {
+                    translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                        rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                            translate([-iz*sin(15),0,(40-iz)*cos(15)]) rotate([90,0,0]) cylinder(r=5+ib,h=200);
+                        }
+                    }
+                    torso_shape(8-(2-ib));
+                }
+                torso_shape(8-2);
+            }
+            
+            //outside recess channels
+            difference() {
+                hull() for(ib=[0,2]) difference() {
+                    translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
+                        rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
+                            translate([-iz*sin(15),0,(40-iz)*cos(15)]) hull() for(ix2=[0,15]) rotate([0,15,0]) translate([ix2,0,0]) {
+                                rotate([90,0,0]) cylinder(r=3+ib,h=200);
+                            }
+                        }
+                    }
+                    torso_shape(8-(2-ib),false,-100);
+                }
+                torso_shape(8-2);
+            }
+        }
+        
+        //cutout holes for shock cord on chest
+        *for(ix=[0,1]) mirror([ix,0,0]) for(iz=[0,20,40]) {
+            rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                translate([0,135-15,0]) {
+                    translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) hull() rotate([0,0,90]) cylinder_oh(3,200);
+                }
+            }
+            
+            //inside bevel
+            hull() for(ib=[0,bev_s]) intersection() {
+                torso_shape(2+(bev_s-ib));
+                rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                    translate([0,135-15,0]) {
+                        translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) hull() rotate([0,0,90]) cylinder_oh(3+ib,200);
+                    }
+                }
+            }
+            
+            //outside bevel
+            hull() for(ib=[0,bev_s]) difference() {
+                rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                    translate([0,135-15,0]) {
+                        translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) hull() rotate([0,0,90]) cylinder_oh(3+ib,200);
+                    }
+                }
+                torso_shape(8-2-(bev_s-ib));
+            }
+            
+            //inside recess for knot
+            hull() for(ib=[0,2]) intersection() {
+                torso_shape((2-ib));
+                rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                    translate([0,135-15,0]) {
+                        translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) cylinder(r=5+ib,h=200);
+                    }
+                }
+            }
+            
+            //inside recess channels
+            hull() for(ib=[0,2]) intersection() {
+                torso_shape((2-ib));
+                rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                    translate([0,135-15,0]) {
+                        translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) hull() for(ix2=[0,15]) rotate([0,0,90-22.5]) translate([ix2,0,0]) {
+                            cylinder(r=5+ib,h=200);
+                        }
+                    }
+                }
+            }
+            
+            //outside recess for knot
+            difference() {
+                hull() for(ib=[0,2]) difference() {
+                    rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                        translate([0,135-15,0]) {
+                            translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) cylinder(r=5+ib,h=200);
+                        }
+                    }
+                    torso_shape(8-(2-ib));
+                }
+                torso_shape(8-2);
+            }
+            
+            //outside recess channels
+            difference() {
+                hull() for(ib=[0,2]) difference() {
+                    rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+                        translate([0,135-15,0]) {
+                            translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) hull() for(ix2=[0,15]) rotate([0,0,90-22.5]) translate([ix2,0,0]) {
+                                cylinder(r=5+ib,h=200);
+                            }
+                        }
+                    }
+                    torso_shape(8-(2-ib),false,-100);
+                }
+                torso_shape(8-2);
+            }
         }
     }
     
@@ -136,79 +499,76 @@ module torso_assmbly() difference() {
             neck_space_mag_co();
         }
     }
-    
-    
-    //cutout recesses for tabs joining lateral sides
-    union() {
-        //tab recess in A segment
-        hull() for(ib=[0,2.4]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
-            hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,0,-8*cos(should_ang)]) rotate([-75,0,0]) {
-                for(iz=[0,-35]) translate([7.5,85+25*tan(30)+40+iz,-50]) rotate([0,0,90]) cylinder_oh(7.5+ib,250);
+            
+    //prevent neck spacer mounting holes from creating an overhang in the tabs
+    for(ixm=[0,1]) mirror([ixm,0,0]) for(in=[1,4]) intersection() {
+        translate([0,0,-8*cos(should_ang)]) torso_shape(2.4+0.01);
+        translate([0,0,-8*cos(should_ang)]) union() {
+            trans_ab_seam() translate([0,-flange_wid/2-0.01,-200]) cube([1000,200,250]);
+            trans_bc_seam() translate([0,-200+flange_wid/2+0.01,-200]) cube([1000,200,250]);
+        }
+        translate([0,0,7.5]) {
+            rotate([-15,0,0]) translate([0,40,0]) {
+                neck_space_mag_co(in) {
+                    mirror([0,(in==4?1:0),0]) hull() {
+                        translate([0,0,-5-50]) rotate([0,0,90]) hull() cylinder_oh(3,50);
+                        for(ia=[-45,45]) rotate([0,0,ia]) translate([0,-25,-5-50]) rotate([0,0,90-ia]) hull() cylinder_oh(3,50);
+                    }
+                }
             }
         }
+    }
+}
+
+module lateral_joining_tab() translate([0,0,-8*cos(should_ang)]) difference() {
+    intersection() {
+        torso_shape(2.4);
+        torso_shape_intersect(0);
         
-        //tab recess in C segment
-        hull() for(ib=[0,2.4]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
-            hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,0,-8*cos(should_ang)]) translate([0,(back_rad-back_dep),-back_hgt]) {
-                rotate([-30,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,250);
-                rotate([asin((-8*cos(should_ang)-15-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,250);
+        //positive shape for tabs joining lateral sides
+        union() {
+            //tabs for A segments
+            *hull() for(ixm=[0,1]) mirror([ixm,0,0]) rotate([-75,0,0]) {
+                for(iz=[0,-35]) translate([7.5,135+iz,-50]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
             }
-        }
-        
-        //tab recess in D segment
-        hull() for(ib=[0,2.4]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
-            hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,0,-8*cos(should_ang)]) translate([0,(back_rad-back_dep),-back_hgt]) {
-                rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,200);
-                rotate([15,0,0]) translate([7.5,0,-100]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,200);
+            
+            //tabs for C segments
+            hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
+                rotate([-10,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
+                rotate([asin((-8*cos(should_ang)-7.5-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
+            }
+            
+            //tabs for D segments
+            *hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
+                rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,200);
+                rotate([15,0,0]) translate([7.5,0,-125]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,200);
             }
         }
     }
     
-    
-    //backpack stud bolt cutouts
-    *union() {
-        plss_torso_stud_location() {
-            rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(3+0.2,100+100);
-            
-            torso_plss_stud_plane(false) translate([0,100+5,0]) hull() {
-                rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(6+0.2-bev_s,100);
-                rotate([90,0,0]) translate([0,0,-bev_s]) rotate([0,0,90]) hull() cylinder_oh(6+0.2,100);
-            }
-            
-            hull() for(ib=[0,0.5]) difference() {
-                rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(3+0.2+ib,200);
-                torso_plss_stud_plane() translate([-100,(0.5-ib),-100]) cube([200,200,200]);
-            }
-        }
-        for(ixm=[0,1]) mirror([ixm,0,0]) hull() for(ib=[0,bev_s]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((bev_s-ib));
-            plss_torso_stud_location(false) {
-                rotate([90,0,0]) rotate([0,0,90]) hull() cylinder_oh(6+0.2+ib,100+100);
-            }
-        }
-    }
+    //cutout the inside
+    torso_shape(0,true);
     
     //cutout screw holes
-    for(ixm=[0,1]) mirror([ixm,0,0]) union() {
-        intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape(8-1.6);
-            for(ii=[0,1,2,3]) screw_locations(ii) hull() cylinder_oh(1.25,250);
-        }
-        intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape(2.4+0.01);
-            for(ii=[0:14]) screw_locations(ii) hull() cylinder_oh(1.5+0.15,250);
-        }
-        for(ii=[0:14]) hull() {
+    union() {
+        for(ixm=[0,1]) mirror([ixm,0,0]) union() {
             intersection() {
-                translate([0,0,-8*cos(should_ang)]) torso_shape(0);
-                screw_locations(ii) cylinder_oh(3,250);
+                torso_shape(8-1.6);
+                for(ii=[0:14]) screw_locations(ii) hull() cylinder_oh(1.25,250);
             }
             intersection() {
-                translate([0,0,-8*cos(should_ang)]) torso_shape(3-0.5);
-                screw_locations(ii) cylinder_oh(0.5,250);
+                torso_shape(2.4+0.01);
+                for(ii=[0:14]) screw_locations(ii) hull() cylinder_oh(1.5+0.15,250);
+            }
+            for(ii=[0:14]) hull() {
+                intersection() {
+                    torso_shape(0);
+                    screw_locations(ii) cylinder_oh(3,250);
+                }
+                intersection() {
+                    torso_shape(3-0.5);
+                    screw_locations(ii) cylinder_oh(0.5,250);
+                }
             }
         }
     }
@@ -221,13 +581,13 @@ module int_a_segment() {
     
     //fillet
     hull() for(ib=[0,bev_s]) intersection() {
-        translate([0,0,-8*cos(should_ang)]) torso_shape(2.4+(bev_s-ib));
+        torso_shape(2.4+(bev_s-ib));
         
         trans_ab_seam() translate([0,flange_wid/2-ib,-200]) cube([1000,200,250]);
     }
     
     intersection() {
-        translate([0,0,-8*cos(should_ang)]) torso_shape(2.4);
+        torso_shape(2.4);
         
         //A-B flange (positive)
         trans_ab_seam() translate([0,-flange_wid/2,-200]) cube([1000,200,250]);
@@ -251,12 +611,12 @@ module int_b_segment() {
         }
         
         hull() for(ib=[0,2.4]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
+            torso_shape((2.4-ib));
             trans_ab_seam() translate([0,-flange_wid/2-ib,-200]) cube([1000,200,250]);
         }
         
         hull() for(ib=[0,2.4]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
+            torso_shape((2.4-ib));
             trans_bc_seam() translate([0,-200+flange_wid/2+ib,-200]) cube([1000,200,250]);
         }
     }
@@ -281,7 +641,7 @@ module int_c_segment() {
     
     //fillet
     hull() for(ib=[0,bev_s]) intersection() {
-        translate([0,0,-8*cos(should_ang)]) torso_shape(2.4+(bev_s-ib));
+        torso_shape(2.4+(bev_s-ib));
         
         //B-C flange
         trans_bc_seam() translate([0,-200-flange_wid/2+ib,-200]) cube([1000,200,250]);
@@ -291,7 +651,7 @@ module int_c_segment() {
     }
     
     intersection() {
-        translate([0,0,-8*cos(should_ang)]) torso_shape(2.4);
+        torso_shape(2.4);
         
         //B-C flange
         trans_bc_seam() translate([0,-200+flange_wid/2,-200]) cube([1000,200,250]);
@@ -310,7 +670,7 @@ module int_d_segment() {
     difference() {
         trans_cd_seam() translate([0,-500,-500+flange_wid/2-0.2]) cube([1000,500,500]);
         hull() for(ib=[0,2.4]) intersection() {
-            translate([0,0,-8*cos(should_ang)]) torso_shape((2.4-ib));
+            torso_shape((2.4-ib));
             trans_cd_seam() translate([0,-500,-flange_wid/2-ib]) cube([1000,500,500]);
         }
     }
@@ -344,24 +704,24 @@ module screw_locations(only_index=undef) {
     //A-A screws
     aa_index = [7,8];
     aa_iz = [-10,-35];
-    translate([0,0,-8*cos(should_ang)]) rotate([-75,0,0]) {
-        for(i=[0,1]) if(only_index==undef || only_index==aa_index[i]) translate([7.5,85+25*tan(30)+40+aa_iz[i],-50]) rotate([0,0,90]) children();
+    rotate([-75,0,0]) {
+        for(i=[0,1]) if(only_index==undef || only_index==aa_index[i]) translate([7.5,135+aa_iz[i],-50]) rotate([0,0,90]) children();
     }
     
     //C-C screws
     cc_index = [9,10,11];
-    translate([0,0,-8*cos(should_ang)]) translate([0,(back_rad-back_dep),-back_hgt]) {
-        if(only_index==undef || only_index==cc_index[0]) rotate([-30,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
-        if(only_index==undef || only_index==cc_index[1]) rotate([-15+asin((-8*cos(should_ang)-15-7.5)/back_rad)/2,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
-        if(only_index==undef || only_index==cc_index[2]) rotate([asin((-8*cos(should_ang)-15-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
+    translate([0,(back_rad-back_dep),-back_hgt]) {
+        //if(only_index==undef || only_index==cc_index[0]) rotate([-30,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
+        if(only_index==undef || only_index==cc_index[1]) rotate([-10,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
+        if(only_index==undef || only_index==cc_index[2]) rotate([asin((-8*cos(should_ang)-7.5-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
     }
     
     //D-D screws
     dd_index = [12,13,14];
-    translate([0,0,-8*cos(should_ang)]) translate([0,(back_rad-back_dep),-back_hgt]) {
+    translate([0,(back_rad-back_dep),-back_hgt]) {
         if(only_index==undef || only_index==dd_index[0]) rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) children();
-        if(only_index==undef || only_index==dd_index[1]) rotate([15,0,0]) translate([7.5,0,-100+10]) rotate([90,0,0]) rotate([0,0,90]) children();
-        if(only_index==undef || only_index==dd_index[2]) rotate([15,0,0]) translate([7.5,0,-50+15]) rotate([90,0,0]) rotate([0,0,90]) children();
+        if(only_index==undef || only_index==dd_index[1]) rotate([15,0,0]) translate([7.5,0,-125+10]) rotate([90,0,0]) rotate([0,0,90]) children();
+        if(only_index==undef || only_index==dd_index[2]) rotate([15,0,0]) translate([7.5,0,-60+15]) rotate([90,0,0]) rotate([0,0,90]) children();
     }
 }
 
@@ -369,18 +729,24 @@ module screw_locations(only_index=undef) {
 
 module torso_shape_intersect(bev_inset=0) {
     //front
-    hull() for(ix=[0,1]) mirror([ix,0,0]) rotate([-75,0,0]) {
-        translate([should_wid_true-20,0,-50]) cylinder(r=20-bev_inset,h=250);
-        translate([should_wid_true-20,125-20,-50]) cylinder(r=20-bev_inset,h=250);
-        translate([should_wid_true-20-25,125-20+25*tan(30),-50]) cylinder(r=20-bev_inset,h=250);
+    hull() for(ix=[0,1]) mirror([ix,0,0]) rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
+        cylinder(r=15-bev_inset,h=250);
+        translate([0,135-15,0]) {
+            translate([0,0-40*sin(22.5),0]) cylinder(r=15-bev_inset,h=250);
+            translate([-40*cos(22.5),0,0]) cylinder(r=15-bev_inset,h=250);
+        }
     }
     //back - upper
     hull() for(ix=[0,1]) mirror([ix,0,0]) translate([should_wid_true-40,(back_rad-back_dep),-back_hgt]) {
         rotate([15,0,0]) for(iz=[50,200]) translate([0,0,iz]) rotate([90,0,0]) cylinder(r=40-bev_inset,h=200);
     }
     //back - lower
-    hull() for(ix=[0,1]) mirror([ix,0,0]) translate([should_wid_true-40,(back_rad-back_dep),-back_hgt]) {
-        rotate([15,0,0]) for(iz=[-100+40,200]) translate([0,-back_rad+50,iz]) rotate([90,0,0]) cylinder(r=40-bev_inset,h=200);
+    hull() for(ix=[0,1]) mirror([ix,0,0]) translate([should_wid_true-20,(back_rad-back_dep),-back_hgt]) {
+        rotate([15,0,0]) translate([0,-back_rad+50,0]) {
+            translate([0,0,200]) rotate([90,0,0]) cylinder(r=20-bev_inset,h=200);
+            translate([0,0,-125+20+40*cos(15)]) rotate([90,0,0]) cylinder(r=20-bev_inset,h=200);
+            translate([-40*sin(15),0,-125+20]) rotate([90,0,0]) cylinder(r=20-bev_inset,h=200);
+        }
     }
 }
 
@@ -459,7 +825,7 @@ module torso_shape(outset=0,co=false,bev_inset=0) hull() {
                 }
             }
             translate([(should_widh-back_hgt*tan(should_ang)),(back_rad-back_dep),-back_hgt]) {
-                rotate([15,0,0]) translate([0,0,-100]) cylinder(r=back_rad+outset,h=100,$fn=$fn*4);
+                rotate([15,0,0]) translate([0,0,-125]) cylinder(r=back_rad+outset,h=125,$fn=$fn*4);
             }
         }
         translate([-(should_wid_true+(co?0.01:0)-bev_inset),-500+0.01,-500]) cube([2*(should_wid_true+(co?0.01:0)-bev_inset),500,1000]);
