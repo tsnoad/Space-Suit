@@ -1,6 +1,7 @@
 
 use <PLSS Torso Shared Modules.scad>;
-//use <PLSS.scad>;
+use <Neckring Torso Shared Modules.scad>;
+
 
 $fn = 72;
 
@@ -364,49 +365,7 @@ module screw_locations(only_index=undef) {
     }
 }
 
-module neck_spacer_shape(rad=120+5,co=false) {
-    cylinder(r=rad,h=5+2,$fn=$fn*2);
-    
-    translate([0,-40+75,0]) rotate([0,-90,0]) rotate([0,0,90]) rotate_extrude(angle=15+(co?0.01:0),$fn=$fn*2) intersection() {
-        translate([0,-rad]) square([200,2*rad]);
-        translate([40-75,0]) circle(r=rad);
-    }
-    
-    translate([0,-40,0]) rotate([0,90,0]) rotate([0,0,-90]) {
-        rotate_extrude(angle=15+(co?0.01:0),$fn=$fn*2) intersection() {
-            translate([0,-rad]) square([200,2*rad]);
-            translate([-40,0]) circle(r=rad);
-        }
-        *rotate([0,0,15]) translate([25,0,0]) rotate_extrude(angle=15+(co?0.01:0),$fn=$fn*2) intersection() {
-            translate([0,-rad]) square([200,2*rad]);
-            translate([-(40+25),0]) circle(r=rad);
-        }
-    }
-    
-    translate([0,-40-25*cos(15),-25*sin(15)]) rotate([15,0,0]) rotate([0,90,0]) rotate([0,0,-90]) rotate_extrude(angle=15+(co?0.01:0),$fn=$fn*2) intersection() {
-        translate([0,-rad]) square([200,2*rad]);
-        translate([(-40-25),0]) circle(r=rad);
-    }
-}
 
-module trans1() {
-     intersection() {
-        translate([0,0,-200]) children();
-            
-        translate([0,-40+75,0]) rotate([-15,0,0]) {
-            translate([0,-(-40+75),-200]) children();
-        }
-        
-        translate([0,-40,0]) rotate([15,0,0]) {
-            translate([0,40,-200]) children();
-        }
-        translate([0,-40,0]) rotate([15,0,0]) {
-            translate([0,-25,0]) rotate([15,0,0]) translate([0,25,0]) {
-                translate([0,40,-200]) children();
-            }
-        }
-    }
-}
 
 module torso_shape_intersect(bev_inset=0) {
     //front
@@ -542,52 +501,4 @@ module back_upper_cs(outset=0) hull() {
     }
 }
 
-module neck_space_mag_co() {
-    mag_is = (8+5)/2-0.75;
-    mag_rad = (120-8+mag_is);
-    mag_hgt = (120+5-mag_rad)*tan(25);
-    
-    translate([0,-40+75,0]) {
-        for(ia=[15,45]) if(ia<acos((-40+75)/mag_rad)) translate([mag_rad*sin(ia),0,0]) {
-            rotate([-15+asin(mag_hgt/(mag_rad*cos(ia)+(40-75))),0,0]) translate([0,mag_rad*cos(ia)+(40-75),0]) {
-                neck_space_mag_screw_co(ia);
-            }
-        }
-    }
-    
-    translate([0,0,0]) {
-        for(ia=[75,105]) translate([mag_rad*sin(ia),0,0]) {
-            translate([0,mag_rad*cos(ia),mag_hgt]) {
-                neck_space_mag_screw_co(ia);
-            }
-        }
-    }
-    
-    *translate([0,-40,0]) {
-        for(ia=[75]) translate([mag_rad*sin(ia),0,0]) {
-            rotate([15-asin(mag_hgt/(mag_rad*cos(ia)+(-40)))*0,0,0]) translate([0,-(mag_rad*cos(ia)+(-40)),0]) {
-                neck_space_mag_screw_co(ia);
-            }
-        }
-    }
-    
-    translate([0,-40-25*cos(15),-25*sin(15)]) {
-        for(ia=[135,165]) translate([mag_rad*sin(ia),0,0]) {
-            rotate([15+15+asin(mag_hgt/(mag_rad*cos(ia)-(-40-25))),0,0]) translate([0,mag_rad*cos(ia)-(-40-25),0]) {
-                neck_space_mag_screw_co(ia);
-            }
-        }
-    }
-}
 
-module neck_space_mag_screw_co(ia) {
-    translate([0,0,-50]) rotate([0,0,90]) hull() cylinder_oh(1.5+0.15,50+10);
-    translate([0,0,-5-50]) rotate([0,0,90]) hull() cylinder_oh(3,50);
-    
-    translate([0,0,5]) rotate([0,0,-ia]) hull() for(j=[0,-20]) translate([0,j,0]) {
-        cylinder(r=0.01,h=5+3/cos(30));
-        for(i=[0:5]) rotate([0,0,i*60]) translate([0,3/cos(30),0]) {
-            cylinder(r=0.15,h=5);
-        }
-    }
-}

@@ -1,5 +1,7 @@
 
-include <Torso Mk 3.scad>;
+
+use <PLSS Torso Shared Modules.scad>;
+//include <Torso Mk 3.scad>;
 
 $fn = 72;
 
@@ -97,19 +99,7 @@ translate([0,-100,-150]) rotate([90,0,0]) difference() {
 
 
 
-module plss_torso_stud_location() {
-    for(ix=[-75,75]) translate([ix,0,-250]) children();
-}
-module plss_torso_portcrn_location(inc_rot=true) {
-    for(ix=[-1,1]*(20+15)) for(iz=[-1,1]*15-[1,1]*60) translate([ix,0,iz]) {
-        rotate([0,(ix>0?90:0)*(inc_rot?1:0),0]) children();
-    }
-}
-module plss_torso_port_location(inc_rot=true) {
-    for(ix=[-20,20]) for(iz=[-60]) translate([ix,0,iz]) {
-        rotate([0,(ix>0?90:0)*(inc_rot?1:0),0]) children();
-    }
-}
+
 
 module plss_datum_from_torso() {
 }
