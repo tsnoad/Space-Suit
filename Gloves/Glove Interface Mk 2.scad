@@ -34,15 +34,6 @@ glove_r1 = glove_c1/3.14159/2;
 glove_r2 = glove_c2/3.14159/2;
 glove_a = abs(atan((glove_r2-glove_r1)/glove_c12h));
 
-//params for o-ring/gasket material
-//using 3mm diameter EPDM sponge gasket
-oring_rad = 1.5;
-oring_area = 3.14159*pow(oring_rad,2); //cross sectional area
-
-oring_gland_wid = 2; //width of the gland/recess that the o-ring will be stuffed into
-oring_gland_dep = oring_area/oring_gland_wid; //how deep does the gland/recess have to be
-oring_fol_hgt = oring_area/oring_gland_wid*0.25; //the o-ring is compressed with a protrusion/follower. The amount of compression should be 25% to get a good seal, so we need to work out the height of the follower, based on that
-
 
 //params for the modular locking ring
 
@@ -88,9 +79,32 @@ latch_mid_r = 2*latch_piv_r*sin(30/2); //how long is the latch in terms of radiu
 latch_inner_r = latch_mid_r-5;
 latch_outer_r = latch_mid_r+5;
 
+//set the position of the latch in terms of rotation around the axis. can also be used to mirror or have multiple latches
+module latch_pos() {
+    rotate([0,0,-30]) children();
+}
+
+//params for o-ring/gasket material
+//using 3mm diameter EPDM sponge gasket
+oring = true;
+oring_rad = 1.5;
+oring_area = 3.14159*pow(oring_rad,2) * 0.9; //cross sectional area - pre-compress the gasket to 90%
+
+oring_fol_wid = 1.6; //width of the follower - 4 wall thicknesses
+oring_gland_wid = oring_fol_wid+2*0.2; //width of the gland/recess that the o-ring will be stuffed into
+oring_gland_dep = oring_area/oring_gland_wid; //how deep does the gland/recess have to be
+oring_fol_hgt = oring_area/oring_gland_wid*0.25; //the o-ring is compressed with a protrusion/follower. The amount of compression should be 25% to get a good seal, so we need to work out the height of the follower, based on that
+
+
+//sets the position of the gasket and follower
+oring_gland_rad = lug_inner_r-2.4-oring_gland_wid/2; //as close as possible to the outer wall - used for glove interface
+//oring_gland_rad = passage_r+1.6+oring_gland_wid/2; //as close as possible to the inner wall - used for neck ring
 
 
 include <../Modular Locking Ring.scad>;
+
+
+import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Gloves/Glove Interface Mk 2 G.stl");
 
 
 //assembled
@@ -115,12 +129,12 @@ difference() {
             }
         }
         
-        !translate([0,0,25+clr_v+bring_btm_hgt+lring_btm_hgt+bring_top_hgt]) { 
-            glove_mandril();
+        translate([0,0,25+clr_v+bring_btm_hgt+lring_btm_hgt+bring_top_hgt]) { 
+            !glove_mandril();
             glove_collar();
         }
     }
-    *cube([100,100,100]); //cutout to check clearances
+    cube([100,100,100]); //cutout to check clearances
     *rotate([0,0,sleeve_seam_a[0]]) cube([100,100,100]); //cutout to check clearances
 }
 
@@ -195,7 +209,7 @@ module sleeve_mandril() difference() {
     mand_r0 = sleeve_r2-sleeve_fab_thk/2*cos(sleeve_a);
     
     rotate_extrude($fn=$fn*2) {
-        difference() {
+        !difference() {
             //body of the mandril
             polygon([
                 [passage_r,bev_s+((mand_r0-bev_s-1.6-bev_s)-(passage_r))/tan(15)],
@@ -572,7 +586,7 @@ module sleeve_collar() difference() {
 module glove_collar() translate([0,0,10+2]) difference() {
     fab_thk = 0.5;
     r1 = glove_r1 - 25*tan(glove_a);
-    col_h = 25;
+    col_h = 20;
     
     col_thk = 3.75;
     col_thk2 = col_thk+3.75;
@@ -643,7 +657,7 @@ module glove_collar() translate([0,0,10+2]) difference() {
         }
     }
     
-    for(iz=[0.25,0.75]*col_h) translate([r1+col_thk2/2,0,iz]) rotate([-90,0,0]) {
+    for(iz=[0.28,0.72]*col_h) translate([r1+col_thk2/2,0,iz]) rotate([-90,0,0]) {
         translate([0,0,-50]) hull() cylinder_oh(1.5+0.15,100);
         
         hull() for(ib=[0,bev_xs]) translate([0,0,5+(bev_xs-ib)]) {
@@ -664,20 +678,26 @@ module glove_collar() translate([0,0,10+2]) difference() {
 }
 
 module glove_mandril() difference() {
+    length_adj = 25;
+
     fab_thk = 0.5;
-    r1 = glove_r1 - 25*tan(glove_a) - fab_thk*cos(glove_a);
-    col_h = 25;
+    r1 = glove_r1 - length_adj*tan(glove_a) - fab_thk*cos(glove_a);
+    mand_hgt = 20;
+    col_h = mand_hgt;
+    
+    hgt1 = lug_hgt + clr_v + (lring_top_hgt-clr_v);
+    hgt2 = hgt1 + 1.2;
     
     union() {
-        cylinder_bev(lug_inner_r,10+0.01,bev_s,0,$fn=$fn*2);
+        cylinder_bev(lug_inner_r,hgt1+0.01,bev_s,0,$fn=$fn*2);
         lug_ring();
         
-        translate([0,0,10+2]) rotate_extrude($fn=$fn*2) union() {
+        translate([0,0,hgt2]) rotate_extrude($fn=$fn*2) union() {
             difference() {
                 //body of the mandril
                 polygon([
-                    [0,-2],
-                    [r1,-2],
+                    [0,-(hgt2-hgt1)],
+                    [r1,-(hgt2-hgt1)],
                 
                     [r1,0],
                 
@@ -700,23 +720,24 @@ module glove_mandril() difference() {
             }
             
             //rounded step from the locking ring to the glove radius
-            mirror([0,1]) round_step(r1,lug_inner_r,2,1,1);
+            mirror([0,1]) round_step(r1,lug_inner_r,hgt2-hgt1,0.4,0.4);
         }
     }
-    translate([0,0,20]) cylinder_neg_bev(passage_r,-20+10+2+col_h,0,bev_s,$fn=$fn*2);
+    
+    translate([0,0,20]) cylinder_neg_bev(passage_r,-20+hgt2+col_h,0,bev_s,$fn=$fn*2);
     
     
     translate([0,0,-0.01]) rotate_extrude($fn=$fn*2) union() {
         //cutout for the o-ring gland
         polygon([
-            [lug_inner_r-2.4+bev_xs,0],
-            [lug_inner_r-2.4,bev_xs],
-            [lug_inner_r-2.4,oring_gland_dep-bev_s],
-            [lug_inner_r-2.4-bev_s,oring_gland_dep],
-            [lug_inner_r-2.4-oring_gland_wid+bev_s,oring_gland_dep],
-            [lug_inner_r-2.4-oring_gland_wid,oring_gland_dep-bev_s],
-            [lug_inner_r-2.4-oring_gland_wid,bev_xs],
-            [lug_inner_r-2.4-oring_gland_wid-bev_xs,0],
+            [oring_gland_rad+oring_gland_wid/2+bev_xs,0],
+            [oring_gland_rad+oring_gland_wid/2,bev_xs],
+            [oring_gland_rad+oring_gland_wid/2,oring_gland_dep-bev_s],
+            [oring_gland_rad+oring_gland_wid/2-bev_s,oring_gland_dep],
+            [oring_gland_rad-oring_gland_wid/2+bev_s,oring_gland_dep],
+            [oring_gland_rad-oring_gland_wid/2,oring_gland_dep-bev_s],
+            [oring_gland_rad-oring_gland_wid/2,bev_xs],
+            [oring_gland_rad-oring_gland_wid/2-bev_xs,0],
         ]);
         
         //leave a bit more material so there is enough wall thickness around the gland
@@ -727,6 +748,7 @@ module glove_mandril() difference() {
             [lug_inner_r-2.4-oring_gland_wid-2.4,oring_gland_dep],
             [0,oring_gland_dep],
         ]);
+        
         translate([0,oring_gland_dep]) round_step(lug_inner_r-2.4-oring_gland_wid-2.4,passage_r,5,2,2);
         //cutout the passage
         translate([0,oring_gland_dep+5]) square([passage_r,50]);
