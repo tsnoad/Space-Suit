@@ -39,7 +39,7 @@ module plss_torso_stud_location(inc_mirror=true) {
 module plss_torso_portcrn_location(inc_rot=true) {
     translate([0,0,-60]) for(ix2=[-1,1]*(20+15)) translate([ix2,0,0]) {
         for(ix=[-15,15]) for(iz=[-15,15]) translate([ix,0,iz]) {
-            rotate([0,(ix>0?90:0)*(inc_rot?1:0)*0,0]) children();
+            rotate([0,(ix2>0?90:0)*(inc_rot?1:0),0]) children();
         }
     }
 }
