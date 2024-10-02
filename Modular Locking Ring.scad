@@ -145,6 +145,43 @@ module round_step_on_rad(step_r0,step_r1,step_a,round_r0,round_r1,hgt,bev_btm=0,
 }
 
 
+module round_step_on_rad_inside(step_r0,step_r1,step_a,round_r0,round_r1,hgt,bev_btm=0,bev_top=0) {
+    step_h0 = step_r0;
+    step_l = step_r1*sin(step_a);
+    step_h1 = step_r0+sqrt(pow(step_r1-round_r1,2)-pow(step_l,2))-step_r0+round_r1;
+    
+
+    t1_hyp = sqrt(pow(step_h1-step_h0-round_r0-round_r1,2)+pow(step_l,2));
+    
+    t1_theta = atan2(step_l,(step_h1-step_h0-round_r0-round_r1));
+    
+    t2_theta = acos((round_r0+round_r1)/t1_hyp);
+    
+    theta = 180 - (t1_theta + t2_theta);
+    
+    
+    difference() {
+        linear_extrude(height=hgt,convexity=10) polygon([
+            [200,0],
+            [step_h0+round_r0,0],
+        
+            [step_h0+round_r0-round_r0*cos(theta),round_r0*sin(theta)],
+    
+            [step_h1-round_r1+round_r1*cos(theta),step_l-round_r1*sin(theta)],
+        
+            [step_h1-round_r1,step_l],
+            [200,step_l],
+        ]);
+        translate([step_h1-round_r1,step_l,0]) {
+            rotate([0,0,180-theta]) cylinder_neg_bev(round_r1,hgt,bev_btm,bev_top,[0,20]);
+        }
+    }
+    translate([step_h0+round_r0,0,0]) {
+        cylinder_bev(round_r0,hgt,bev_btm,bev_top);
+    }
+}
+
+
 module lug_ring() {
     r_inner = lug_inner_r;
     r_outer = lug_outer_r;
@@ -212,10 +249,10 @@ module locking_ring_top() union() {
     difference() {
         union() {
             cylinder_bev(r_outer,hgt1,bev_xs,bev_l);
-            rotate([0,0,-30]) if(latch) locking_ring_latch_prot(hgt1,bev_xs,bev_l);
+            if(latch) latch_pos() locking_ring_latch_prot(hgt1,bev_xs,bev_l);
         }
             
-        intersection() {
+        rotate([0,0,limtab_a_trav/2]) intersection() {
             union() {
                 translate([0,0,-1]) linear_extrude(height=10,convexity=10) {
                     for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
@@ -246,7 +283,7 @@ module locking_ring_top() union() {
         
         children();
         
-        rotate([0,0,-30]) if(latch) latch_datum_from_origin() {
+        if(latch) latch_pos() latch_datum_from_origin() {
             cylinder_neg_bev(1.5+0.15,hgt1-2,bev_xs,bev_xs);
             
             translate([0,0,hgt1-2+bev_s]) for(ia=[0,45]) rotate([0,0,-90+ia]) cylinder_neg_bev(4,2-bev_s,0,bev_s,[0,10]);
@@ -264,7 +301,7 @@ module locking_ring_top() union() {
         }*/
     }
     
-    for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
+    rotate([0,0,limtab_a_trav/2]) for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
         for(j=[0,1]) mirror([j,0,0]) rotate([0,0,360/lug_num/2]) {
             hull() for(i=[sqrt(pow(r_inner-clr_h+crn_r,2)-pow(lug_widh+crn_r,2)),sqrt(pow(r_intrm-clr_h-crn_r,2)-pow(lug_widh+crn_r,2))]) translate([lug_widh+crn_r,i,0]) {
                 
@@ -295,10 +332,12 @@ module locking_ring_bottom() union() {
     hgt1 = lring_btm_hgt-clr_v;
     hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
     
+    btm_bev = bev_s;
+    
     difference() {
         union() {
-            cylinder_bev(r_outer,hgt2,bev_l,bev_xs,$fn=$fn*2);
-            rotate([0,0,-30]) if(latch) locking_ring_bottom_latch_prot_pos();
+            cylinder_bev(r_outer,hgt2,btm_bev,bev_xs,$fn=$fn*2);
+            if(latch) latch_pos() locking_ring_bottom_latch_prot_pos();
         }
         
         rotate([0,0,-limtab_a_offs-limtab_a_trav/2]) intersection() {
@@ -309,7 +348,7 @@ module locking_ring_bottom() union() {
                             polygon([
                                 [-0.01*tan(limtab_a_trav/2),0.01],
                                 [-200*tan(limtab_a_trav/2),200],
-                                [limtab_widh-crn_r,200],
+                                [200/(sqrt(pow(r_intrm2-crn_r,2)-pow(limtab_widh-crn_r,2)))*(limtab_widh-crn_r),200],
                                 [limtab_widh-crn_r,sqrt(pow(r_intrm2-crn_r,2)-pow(limtab_widh-crn_r,2))],
                                 //[limtab_widh,sqrt(pow(r_intrm2-crn_r,2)-pow(limtab_widh-crn_r,2))],
                                 //[limtab_widh,sqrt(pow(r_inner-clr_h+crn_r,2)-pow(limtab_widh+crn_r,2))],
@@ -336,7 +375,7 @@ module locking_ring_bottom() union() {
         translate([0,0,hgt2-bev_xs]) cylinder_bev(r_intrm1+bev_xs,50,bev_xs,0);
         cylinder_neg_bev(r_inner,hgt1,bev_s,bev_s);
         
-        rotate([0,0,-30]) if(latch) locking_ring_bottom_latch_prot_neg();
+        if(latch) latch_pos() locking_ring_bottom_latch_prot_neg();
         
         children();
         
@@ -360,7 +399,7 @@ module locking_ring_bottom() union() {
         }*/
     }
     
-    rotate([0,0,-30]) if(latch) locking_ring_bottom_latch_prot_pos2();
+    if(latch) latch_pos() locking_ring_bottom_latch_prot_pos2();
         
     rotate([0,0,-limtab_a_offs-limtab_a_trav/2]) {
         for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num]) {
@@ -376,22 +415,26 @@ module locking_ring_bottom() union() {
 module locking_ring_latch_prot(hgt,bev_btm,bev_top) {
     intersection() {
         cylinder_bev(latch_prot_outer_r,hgt,bev_btm,bev_top,$fn=$fn*2);
-        rotate_extrude(angle=-30-2*asin(((5+clr_h)/2)/lring_outer_r)) square([100,50]);
+        rotate_extrude(angle=-latch_mid_a-asin(5/lring_outer_r)-2*asin(((5+clr_h)/2)/lring_outer_r)) square([latch_prot_outer_r+50,50]);
     }
     
-    for(ia=[-30-2*asin(((5+clr_h)/2)/lring_outer_r),0]) rotate([0,0,ia]) mirror([0,(ia<0?0:1),0]) {
+    echo(-limtab_a_offs/2-2*asin(((5+clr_h)/2)/lring_outer_r));
+    
+    for(ia=[-latch_mid_a-asin(5/lring_outer_r)-2*asin(((5+clr_h)/2)/lring_outer_r),0]) rotate([0,0,ia]) mirror([0,(ia==0?1:0),0]) {
         rotate([0,0,-7.5]) round_step_on_rad(lring_outer_r,latch_prot_outer_r,7.5,2,5,hgt,bev_btm,bev_top);
     }
 }
 
 module locking_ring_bottom_latch_prot_pos() {
+    btm_bev = bev_s;
+    
     hgt1 = lring_btm_hgt-clr_v;
     hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
     
-    locking_ring_latch_prot(hgt1,bev_l,bev_xs);
+    locking_ring_latch_prot(hgt1,btm_bev,bev_xs);
     
     difference() {
-        locking_ring_latch_prot(hgt2,bev_l,bev_xs);
+        locking_ring_latch_prot(hgt2,btm_bev,bev_xs);
         
         translate([latch_piv_r,0,hgt1-bev_s]) cylinder_bev(latch_outer_r+clr_h,50,2*bev_s,0,$fn=$fn*2);
     }
@@ -407,6 +450,7 @@ module locking_ring_bottom_latch_prot_neg() {
     crn_r_xs = 0.5;
     crn_r_s = 1;
     
+    //pivot bolt and nut
     translate([latch_piv_r,0,0]) {
         cylinder_neg_bev(1.5+0.15,hgt1,0,bev_xs);
         
@@ -495,6 +539,8 @@ module locking_ring_bottom_latch_prot_pos2() {
     crn_r_xs = 0.5;
     crn_r_s = 1;
     
+    btm_bev = bev_s;
+    
     intersection() {
         union() {
             translate(latch_corner_loc(r_intrm1+crn_r_xs,latch_outer_r+clr_h+crn_r_xs)) {
@@ -532,10 +578,10 @@ module locking_ring_bottom_latch_prot_pos2() {
                 }
             }
         }
-        cylinder_bev(latch_prot_outer_r,hgt2,bev_l,0,$fn=$fn*2);
+        cylinder_bev(latch_prot_outer_r,hgt2,btm_bev,0,$fn=$fn*2);
         union() {
             translate([0,-200,0]) cube([200,200,200]);
-            cylinder_bev(lring_outer_r,hgt2,bev_l,0,$fn=$fn*2);
+            cylinder_bev(lring_outer_r,hgt2,btm_bev,0,$fn=$fn*2);
         }
     }
 }
@@ -609,22 +655,106 @@ module base_ring_top() {
         
         children();
         
-       if(latch) base_ring_top_latch_neg();
+       if(latch) rotate([0,0,limtab_a_trav]) latch_pos() base_ring_top_latch_neg();
     }
-    if(latch) base_ring_top_latch_pos();
+    if(latch) rotate([0,0,limtab_a_trav]) latch_pos() base_ring_top_latch_pos();
     
-    difference() {
-        rotate_extrude() polygon([
-            [lug_inner_r-2.4-2/2-1.6/2,0],
-            [lug_inner_r-2.4-2/2-1.6/2,bring_top_hgt+oring_fol_hgt-bev_xs],
-            [lug_inner_r-2.4-2/2-1.6/2+bev_xs,bring_top_hgt+oring_fol_hgt],
-            [lug_inner_r-2.4-2/2+1.6/2-bev_xs,bring_top_hgt+oring_fol_hgt],
-            [lug_inner_r-2.4-2/2+1.6/2,bring_top_hgt+oring_fol_hgt-bev_xs],
-            [lug_inner_r-2.4-2/2+1.6/2,bring_top_hgt+bev_xs],
-            [lug_inner_r-2.4-2/2+1.6/2+bev_xs,bring_top_hgt],
-            [lug_inner_r-2.4-2/2+1.6/2+bev_xs,0],
+    if(oring) difference() {
+        rotate_extrude(convexity=10,$fn=$fn*2) polygon([
+            [oring_gland_rad-oring_fol_wid/2-bev_xs,0],
+            
+            [oring_gland_rad-oring_fol_wid/2-bev_xs,bring_top_hgt],
+            [oring_gland_rad-oring_fol_wid/2,bring_top_hgt+bev_xs],
+            
+            [oring_gland_rad-oring_fol_wid/2,bring_top_hgt+oring_fol_hgt-bev_xs],
+            [oring_gland_rad-oring_fol_wid/2+bev_xs,bring_top_hgt+oring_fol_hgt],
+            
+            [oring_gland_rad+oring_fol_wid/2-bev_xs,bring_top_hgt+oring_fol_hgt],
+            [oring_gland_rad+oring_fol_wid/2,bring_top_hgt+oring_fol_hgt-bev_xs],
+            
+            [oring_gland_rad+oring_fol_wid/2,bring_top_hgt+bev_xs],
+            [oring_gland_rad+oring_fol_wid/2+bev_xs,bring_top_hgt],
+            
+            [oring_gland_rad+oring_fol_wid/2+bev_xs,0],
         ]);
         children();
+    }
+    
+    union() {
+        rv = 2.5; //minor radius (how thick is the vent)
+        rl = 120-8-0.2; //outside major radius
+        a = 3*3.14159*pow(8/2,2); //area
+        theta = 360/(3.14159*(pow(rl,2)-pow(rl-2*rv,2)))*(a/2-3.14159*pow(rv,2)/2);
+        
+        
+        round_r0 = 4;
+        round_r1 = rv+1.6+bev_l;
+        
+        step_r0 = rl-1.6-rv-round_r1;
+        step_r1 = passage_r;
+        step_a = asin(10/step_r1);
+        theta2 = asin((step_r1*sin(theta) + 7.5)/step_r1);
+        
+        rotate([0,0,theta+step_a]) difference() {
+            intersection() {
+                union() {
+                    for(ixm=[0,1]) mirror([ixm,0,0]) rotate([0,0,-90+theta2]) round_step_on_rad_inside(step_r0,step_r1,step_a,round_r0,round_r1,hgt1,bev_xs,bev_l);
+                    
+                    rotate([0,0,-90-theta2]) rotate_extrude(angle=2*theta2) polygon([
+                        [200,0],
+                        [step_r0+bev_xs,0],
+                        [step_r0,bev_xs],
+                        [step_r0,hgt1-bev_l],
+                        [step_r0+bev_l,hgt1],
+                        [200,hgt1],
+                    ]);
+                }
+                cylinder(r=passage_r+bev_l+0.01,h=50);
+            }
+            
+            for(ixm=[0,1]) mirror([ixm,0,0]) rotate([0,0,-90+theta2]) translate([step_r0+(step_r1-step_r0)/2,0,0]) {
+                cylinder_bev(1.25,hgt1-1.2,0,0.25);
+                cylinder_neg_bev(1.25,bev_s,bev_s,0);
+            }
+            
+            rotate([0,0,-90-90]) {
+                //linear_extrude(height=20) vent_section(rv,rl,a,0);
+                
+                ia_inc = 1/($fn/2);
+                iz_inc = 1/16;
+                outset = 0;
+                
+                for(ia_ex=[0:ia_inc:1-ia_inc]) {
+                    for(iz_ex=[0:iz_inc:1-iz_inc]) hull() for(iz=[iz_ex,iz_ex+iz_inc]) {
+                        for(ia=[ia_ex,ia_ex+ia_inc]) {
+                            rl = 120-8-0.2-1.6*(sin(180*(1-iz)-90)/2+0.5);
+                        
+                            translate([0,0,hgt1*iz]) {
+                                rotate([0,0,(2*ia-1)*theta]) translate([0,rl-rv,0]) cylinder(r=rv+outset,h=0.01);
+                            }
+                        }
+                    }
+                    hull() for(ia=[ia_ex,ia_ex+ia_inc]) {
+                        rl = 120-8-0.2-1.6;
+                        translate([0,0,-0.01]) rotate([0,0,(2*ia-1)*theta]) translate([0,rl-rv,0]) cylinder(r1=rv+outset+bev_xs,r2=rv+outset-1,h=bev_xs+1);
+                    }
+                    hull() for(ia=[ia_ex,ia_ex+ia_inc]) {
+                        rl = 120-8-0.2;
+                        translate([0,0,hgt1-1-bev_xs+0.01]) rotate([0,0,(2*ia-1)*theta]) translate([0,rl-rv,0]) cylinder(r1=rv+outset-1,r2=rv+outset+bev_xs,h=bev_xs+1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+module vent_section(rv,rl,a,outset=0) {
+    theta = 360/(3.14159*(pow(rl,2)-pow(rl-2*rv,2)))*(a/2-3.14159*pow(rv,2)/2);
+    //echo(theta);
+    
+    for(j=[0:1/($fn/4):1-1/($fn/4)]) hull() for(i=[j,j+1/($fn/4)]) {
+        rotate([0,0,(2*i-1)*theta]) translate([0,rl-rv]) circle(r=rv+outset);
     }
 }
 
@@ -654,8 +784,8 @@ module base_ring_top_latch_neg() {
             [latch_tab_r-clr_latch,hgt2-bev_s],
             [latch_tab_r-clr_latch-bev_s,hgt2+0.01],
             
-            [50,hgt2+0.01],
-            [50,-0.01],
+            [latch_tab_r+20,hgt2+0.01],
+            [latch_tab_r+20,-0.01],
         ]);
     }
     
@@ -715,7 +845,7 @@ module base_ring_bottom() difference() {
                         polygon([
                             [-0.01,0.01],
                             [-0.01,200],
-                            [limtab_widh-crn_r,200],
+                            [200/(sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2)))*(limtab_widh-crn_r),200],
                             [limtab_widh-crn_r,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))],
                             [limtab_widh,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))],
                             [limtab_widh,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2))],
@@ -806,7 +936,7 @@ module latch() latch_datum_from_origin() {
             intersection() {
                 cylinder_bev(latch_outer_r,hgt2,bev_s,bev_s);
                 origin_datum_from_latch() cylinder_bev(lring_outer_r,hgt2,bev_s,bev_s);
-                origin_datum_from_latch() cube([100,100,100]);
+                origin_datum_from_latch() cube([200,200,200]);
             }
             cylinder_neg_bev(latch_inner_r,hgt2,bev_s,bev_s);
             origin_datum_from_latch() cylinder_neg_bev(latch_tab_r,hgt2,bev_s,bev_s);
@@ -847,7 +977,7 @@ module latch() latch_datum_from_origin() {
                 intersection() {
                     cylinder_bev(latch_outer_r,hgt2,bev_s,bev_s);
                     origin_datum_from_latch() cylinder_bev(latch_button_outer_r,hgt2,bev_s,bev_s);
-                    origin_datum_from_latch() rotate([0,0,-acos((pow(latch_button_outer_r,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_button_outer_r)*latch_piv_r))+2*asin((15/2)/(latch_button_outer_r))]) translate([0,-100,0]) cube([100,100,100]);
+                    origin_datum_from_latch() rotate([0,0,-acos((pow(latch_button_outer_r,2)+pow(latch_piv_r,2)-pow(latch_outer_r,2))/(2*(latch_button_outer_r)*latch_piv_r))+2*asin((15/2)/(latch_button_outer_r))]) translate([0,-200,0]) cube([200,200,200]);
                 }
                 
                 
