@@ -145,18 +145,43 @@ module round_step_on_rad(step_r0,step_r1,step_a,round_r0,round_r1,hgt,bev_btm=0,
 }
 
 
+module round_step_on_rad_inside_2d(step_r0,step_r1,step_a,round_r0,round_r1) {
+    step_h0 = step_r0;
+    step_l = step_r1*sin(step_a);
+    step_h1 = step_r0+sqrt(pow(step_r1-round_r1,2)-pow(step_l,2))-step_r0+round_r1;
+    
+    t1_hyp = sqrt(pow(step_h1-step_h0-round_r0-round_r1,2)+pow(step_l,2));
+    t1_theta = atan2(step_l,(step_h1-step_h0-round_r0-round_r1));
+    t2_theta = acos((round_r0+round_r1)/t1_hyp);
+    theta = 180 - (t1_theta + t2_theta);
+    
+    difference() {
+        polygon([
+            [200,0],
+            [step_h0+round_r0,0],
+        
+            [step_h0+round_r0-round_r0*cos(theta),round_r0*sin(theta)],
+
+            [step_h1-round_r1+round_r1*cos(theta),step_l-round_r1*sin(theta)],
+        
+            [step_h1-round_r1,step_l],
+            [200,step_l],
+        ]);
+        translate([step_h1-round_r1,step_l]) circle(r=round_r1);
+    }
+
+    translate([step_h0+round_r0,0]) circle(r=round_r0);
+}
+
+
 module round_step_on_rad_inside(step_r0,step_r1,step_a,round_r0,round_r1,hgt,bev_btm=0,bev_top=0) {
     step_h0 = step_r0;
     step_l = step_r1*sin(step_a);
     step_h1 = step_r0+sqrt(pow(step_r1-round_r1,2)-pow(step_l,2))-step_r0+round_r1;
     
-
     t1_hyp = sqrt(pow(step_h1-step_h0-round_r0-round_r1,2)+pow(step_l,2));
-    
     t1_theta = atan2(step_l,(step_h1-step_h0-round_r0-round_r1));
-    
     t2_theta = acos((round_r0+round_r1)/t1_hyp);
-    
     theta = 180 - (t1_theta + t2_theta);
     
     
@@ -680,72 +705,7 @@ module base_ring_top() {
         children();
     }
     
-    union() {
-        rv = 2.5; //minor radius (how thick is the vent)
-        rl = 120-8-0.2; //outside major radius
-        a = 3*3.14159*pow(8/2,2); //area
-        theta = 360/(3.14159*(pow(rl,2)-pow(rl-2*rv,2)))*(a/2-3.14159*pow(rv,2)/2);
-        
-        
-        round_r0 = 4;
-        round_r1 = rv+1.6+bev_l;
-        
-        step_r0 = rl-1.6-rv-round_r1;
-        step_r1 = passage_r;
-        step_a = asin(10/step_r1);
-        theta2 = asin((step_r1*sin(theta) + 7.5)/step_r1);
-        
-        rotate([0,0,theta+step_a]) difference() {
-            intersection() {
-                union() {
-                    for(ixm=[0,1]) mirror([ixm,0,0]) rotate([0,0,-90+theta2]) round_step_on_rad_inside(step_r0,step_r1,step_a,round_r0,round_r1,hgt1,bev_xs,bev_l);
-                    
-                    rotate([0,0,-90-theta2]) rotate_extrude(angle=2*theta2) polygon([
-                        [200,0],
-                        [step_r0+bev_xs,0],
-                        [step_r0,bev_xs],
-                        [step_r0,hgt1-bev_l],
-                        [step_r0+bev_l,hgt1],
-                        [200,hgt1],
-                    ]);
-                }
-                cylinder(r=passage_r+bev_l+0.01,h=50);
-            }
-            
-            for(ixm=[0,1]) mirror([ixm,0,0]) rotate([0,0,-90+theta2]) translate([step_r0+(step_r1-step_r0)/2,0,0]) {
-                cylinder_bev(1.25,hgt1-1.2,0,0.25);
-                cylinder_neg_bev(1.25,bev_s,bev_s,0);
-            }
-            
-            rotate([0,0,-90-90]) {
-                //linear_extrude(height=20) vent_section(rv,rl,a,0);
-                
-                ia_inc = 1/($fn/2);
-                iz_inc = 1/16;
-                outset = 0;
-                
-                for(ia_ex=[0:ia_inc:1-ia_inc]) {
-                    for(iz_ex=[0:iz_inc:1-iz_inc]) hull() for(iz=[iz_ex,iz_ex+iz_inc]) {
-                        for(ia=[ia_ex,ia_ex+ia_inc]) {
-                            rl = 120-8-0.2-1.6*(sin(180*(1-iz)-90)/2+0.5);
-                        
-                            translate([0,0,hgt1*iz]) {
-                                rotate([0,0,(2*ia-1)*theta]) translate([0,rl-rv,0]) cylinder(r=rv+outset,h=0.01);
-                            }
-                        }
-                    }
-                    hull() for(ia=[ia_ex,ia_ex+ia_inc]) {
-                        rl = 120-8-0.2-1.6;
-                        translate([0,0,-0.01]) rotate([0,0,(2*ia-1)*theta]) translate([0,rl-rv,0]) cylinder(r1=rv+outset+bev_xs,r2=rv+outset-1,h=bev_xs+1);
-                    }
-                    hull() for(ia=[ia_ex,ia_ex+ia_inc]) {
-                        rl = 120-8-0.2;
-                        translate([0,0,hgt1-1-bev_xs+0.01]) rotate([0,0,(2*ia-1)*theta]) translate([0,rl-rv,0]) cylinder(r1=rv+outset-1,r2=rv+outset+bev_xs,h=bev_xs+1);
-                    }
-                }
-            }
-        }
-    }
+    base_ring_top_duct(hgt1,hgt2);
 }
 
 
@@ -817,7 +777,7 @@ module base_ring_top_latch_pos() {
 }
 
 
-module base_ring_bottom() difference() {
+module base_ring_bottom() {
     /*r_inner = 120;
     r_intrm = 120+4;
     r_outer = 120+7.5+2.5;
@@ -833,82 +793,87 @@ module base_ring_bottom() difference() {
     hgt1 = bring_btm_hgt-clr_v;
     hgt2 = bring_btm_hgt+lring_btm_hgt;
     
-    union() {
-        cylinder_bev(r_outer,hgt1,bev_s,bev_s);
-        cylinder_bev(r_inner,hgt2,0,0);
-        cylinder_bev(r_inner+bev_s,hgt1+bev_s,0,bev_s);
-        
-        intersection() {
-            linear_extrude(height=50,convexity=10) {
-                for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num-limtab_a_offs]) {
-                    for(j=[0,1]) mirror([j,0,0]) {
-                        polygon([
-                            [-0.01,0.01],
-                            [-0.01,200],
-                            [200/(sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2)))*(limtab_widh-crn_r),200],
-                            [limtab_widh-crn_r,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))],
-                            [limtab_widh,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))],
-                            [limtab_widh,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2))],
-                            [limtab_widh+crn_r,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2))],
-                        ]);
+    difference() {
+        union() {
+            cylinder_bev(r_outer,hgt1,bev_s,bev_s);
+            cylinder_bev(r_inner,hgt2,0,0);
+            cylinder_bev(r_inner+bev_s,hgt1+bev_s,0,bev_s);
+            
+            intersection() {
+                linear_extrude(height=50,convexity=10) {
+                    for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num-limtab_a_offs]) {
+                        for(j=[0,1]) mirror([j,0,0]) {
+                            polygon([
+                                [-0.01,0.01],
+                                [-0.01,200],
+                                [200/(sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2)))*(limtab_widh-crn_r),200],
+                                [limtab_widh-crn_r,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))],
+                                [limtab_widh,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))],
+                                [limtab_widh,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2))],
+                                [limtab_widh+crn_r,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2))],
+                            ]);
+                        }
                     }
                 }
+                union() {
+                    cylinder_bev(r_intrm,hgt2,0,0);
+                    cylinder_bev(r_intrm+bev_s,hgt1+bev_s,0,bev_s);
+                }
             }
-            union() {
-                cylinder_bev(r_intrm,hgt2,0,0);
-                cylinder_bev(r_intrm+bev_s,hgt1+bev_s,0,bev_s);
+            
+            for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num-limtab_a_offs]) {
+                for(j=[0,1]) mirror([j,0,0]) {
+                    translate([limtab_widh-crn_r,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))]) {
+                        hull() for(k=[0,-5]) translate([0,k,0]) cylinder_bev(crn_r,hgt2,0,0);
+                        hull() for(k=[0,-5]) translate([0,k,0]) cylinder_bev(crn_r+bev_s,hgt1+bev_s,0,bev_s);
+                    }
+                }
             }
         }
         
         for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num-limtab_a_offs]) {
             for(j=[0,1]) mirror([j,0,0]) {
-                translate([limtab_widh-crn_r,sqrt(pow(r_intrm-crn_r,2)-pow(limtab_widh-crn_r,2))]) {
-                    hull() for(k=[0,-5]) translate([0,k,0]) cylinder_bev(crn_r,hgt2,0,0);
-                    hull() for(k=[0,-5]) translate([0,k,0]) cylinder_bev(crn_r+bev_s,hgt1+bev_s,0,bev_s);
+                translate([limtab_widh+crn_r,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2)),hgt1]) {
+                    cylinder_bev(crn_r,50,bev_s,0);
                 }
             }
         }
-    }
-    
-    for(i=[0:limtab_num-1]) rotate([0,0,(i)*360/limtab_num-limtab_a_offs]) {
-        for(j=[0,1]) mirror([j,0,0]) {
-            translate([limtab_widh+crn_r,sqrt(pow(r_inner+crn_r,2)-pow(limtab_widh+crn_r,2)),hgt1]) {
-                cylinder_bev(crn_r,50,bev_s,0);
+        
+        
+        /*#for(i=[360/16/2:360/16:360]) rotate([0,0,i]) translate([120-8/2,0,-0.01]) {
+            hull() {
+                cylinder(r=1.25,h=5);
+                cylinder(r=0.5,h=5+(1.25-0.5));
             }
+            cylinder(r1=1.75,r2=1.25,h=1.75-1.25);
         }
+        
+        base_ring_screws() {
+            translate([0,0,-1]) cylinder(r=1.75,h=50);
+            hull() translate([0,0,5-0.4]) {
+                cylinder(r=1.75,h=50);
+                translate([200,0,0]) cylinder(r=1.75,h=50);
+            }
+            hull() for(i=[0,1]) mirror([0,i,0]) {
+                translate([1.75,bev_s,5-0.4]) cylinder(r=1.75,h=50,$fn=4);
+            }
+            
+            hull() for(i=[0:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-1]) {
+                cylinder(r=0.2,h=1+5-0.4-1-2);
+                cylinder(r=0.2+0.2,h=1+5-0.4-1-2-1);
+            }
+            
+            hull() for(i=[0:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-1]) cylinder(r=0.2,h=1+5-0.4-1);
+            hull() for(i=[0:2]) rotate([0,0,i*120]) translate([0,2.75/cos(30),-1]) cylinder(r=0.2,h=1+5-0.4-1+0.2); 
+        }*/
+        
+        cylinder_neg_bev(passage_r,hgt2,bev_l,bev_xs);
+        
+        children();
     }
     
     
-    /*#for(i=[360/16/2:360/16:360]) rotate([0,0,i]) translate([120-8/2,0,-0.01]) {
-        hull() {
-            cylinder(r=1.25,h=5);
-            cylinder(r=0.5,h=5+(1.25-0.5));
-        }
-        cylinder(r1=1.75,r2=1.25,h=1.75-1.25);
-    }
-    
-    base_ring_screws() {
-        translate([0,0,-1]) cylinder(r=1.75,h=50);
-        hull() translate([0,0,5-0.4]) {
-            cylinder(r=1.75,h=50);
-            translate([200,0,0]) cylinder(r=1.75,h=50);
-        }
-        hull() for(i=[0,1]) mirror([0,i,0]) {
-            translate([1.75,bev_s,5-0.4]) cylinder(r=1.75,h=50,$fn=4);
-        }
-        
-        hull() for(i=[0:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-1]) {
-            cylinder(r=0.2,h=1+5-0.4-1-2);
-            cylinder(r=0.2+0.2,h=1+5-0.4-1-2-1);
-        }
-        
-        hull() for(i=[0:5]) rotate([0,0,i*60]) translate([0,2.75/cos(30),-1]) cylinder(r=0.2,h=1+5-0.4-1);
-        hull() for(i=[0:2]) rotate([0,0,i*120]) translate([0,2.75/cos(30),-1]) cylinder(r=0.2,h=1+5-0.4-1+0.2); 
-    }*/
-    
-    cylinder_neg_bev(passage_r,hgt2,bev_l,bev_xs);
-    
-    children();
+    base_ring_bottom_duct(hgt1,hgt2);
 }
 
 module latch_datum_from_origin() {
