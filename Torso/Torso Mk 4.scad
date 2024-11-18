@@ -29,21 +29,29 @@ back_rad = (pow(back_dep,2) + pow(back_hgt2-should_rad,2) - pow(should_rad,2)) /
 //clav_dep = 70;
 
 strap_wid = 40; //width of shoulder straps
-outset = 7.5; //thickness of shoulder straps
+//outset = 7.5; //thickness of shoulder straps
 bev_s = 0.5; //bevel
 
-flange_wid = 15;
+flange_wid = 15; //width of flange/tab used to join segments
+
+//used by make script
+*/* make 'Torso Mk 4 A.stl' */ torso_assmbly() translate([0,0,-8*cos(should_ang)]) int_a_segment();
+*/* make 'Torso Mk 4 B.stl' */ torso_assmbly() translate([0,0,-8*cos(should_ang)]) int_b_segment();
+*/* make 'Torso Mk 4 C.stl' */ torso_assmbly() translate([0,0,-8*cos(should_ang)]) int_c_segment();
+*/* make 'Torso Mk 4 CL.stl' */ torso_assmbly() mirror([1,0,0]) translate([0,0,-8*cos(should_ang)]) int_c_segment();
+*/* make 'Torso Mk 4 D.stl' */ torso_assmbly() translate([0,0,-8*cos(should_ang)]) int_d_segment();
+*/* make 'Torso Mk 4 E.stl' */ lateral_joining_tab_a();
+*/* make 'Torso Mk 4 F.stl' */ lateral_joining_tab_c();
+*/* make 'Torso Mk 4 G.stl' */ lateral_joining_tab_d();
+*/* make 'Torso Mk 4 H.stl' */ interface_plate();
 
 
-*torso_assmbly() translate([-500,-500,-500]) cube([1000,1000,1000]);
-
-//torso_assmbly() int_a_segment();
-//torso_assmbly() int_b_segment();
-//torso_assmbly() translate([0,0,-8*cos(should_ang)]) for(ixm=[0,1]) mirror([ixm,0,0]) int_c_segment();
-//torso_assmbly() translate([0,0,-8*cos(should_ang)]) int_c_segment();
-torso_assmbly() translate([0,0,-8*cos(should_ang)]) mirror([1,0,0]) int_c_segment();
-
-!lateral_joining_tab();
+//assembled view
+torso_assmbly() translate([-500,-500,-500]) cube([1000,1000,1000]);
+*lateral_joining_tab_a();
+*lateral_joining_tab_c();
+*lateral_joining_tab_d();
+*translate([0,0,-8*cos(should_ang)]) interface_plate();
 
 module torso_assmbly() difference() {
     intersection() {
@@ -159,7 +167,7 @@ module torso_assmbly() difference() {
         //cutout recesses for tabs joining lateral sides
         union() {
             //tab recess in A segment
-            *hull() for(ib=[0,2.4]) intersection() {
+            hull() for(ib=[0,2.4]) intersection() {
                 torso_shape((2.4-ib));
                 hull() for(ixm=[0,1]) mirror([ixm,0,0]) rotate([-75,0,0]) {
                     for(iz=[0,-35]) translate([7.5,135+iz,-50]) rotate([0,0,90]) cylinder_oh(7.5+ib,250);
@@ -175,7 +183,7 @@ module torso_assmbly() difference() {
             }
             
             //tab recess in D segment
-            *hull() for(ib=[0,2.4]) intersection() {
+            hull() for(ib=[0,2.4]) intersection() {
                 torso_shape((2.4-ib));
                 hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
                     rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5+ib,200);
@@ -238,7 +246,7 @@ module torso_assmbly() difference() {
                 hull() for(iz=[0,-bev_s]) for(ix=[-1,1]*(20+15+15+2-bev_s)) for(iy=[-1,1]*15/cos(asin((back_hgt-strap_wid*sin(25)-60)/(back_rad+8+10)))) translate([ix,iy,iz]) cylinder(r=5+0.4+2.5+(bev_s+iz),h=100);
                 
                 //screw holes to mount interface plate
-                for(ix=[-1,1]*(7.5)) for(iy=[-1,1]*15) translate([ix,iy,0]) {
+                #for(ix=[-1,1]*(7.5)) for(iy=[-1,1]*15) translate([ix,iy,0]) {
                     translate([0,0,-6]) hull() rotate([0,0,90]) {
                         cylinder_oh(1.25-0.5,50);
                         translate([0,0,0.5]) cylinder_oh(1.25,50);
@@ -314,7 +322,7 @@ module torso_assmbly() difference() {
         }
         
         //cutout holes for shock cord on back
-        *for(ix=[0,1]) mirror([ix,0,0]) for(iz=[0,20,40]) {
+        for(ix=[0,1]) mirror([ix,0,0]) for(iz=[0,20,40]) {
             translate([should_wid_true-15,(back_rad-back_dep),-back_hgt]) {
                 rotate([15,0,0]) translate([0,-back_rad+50,-125+15]) {
                     translate([-iz*sin(15),0,(40-iz)*cos(15)]) rotate([90,0,0]) hull() rotate([0,0,90]) cylinder_oh(3,200);
@@ -393,7 +401,7 @@ module torso_assmbly() difference() {
         }
         
         //cutout holes for shock cord on chest
-        *for(ix=[0,1]) mirror([ix,0,0]) for(iz=[0,20,40]) {
+        for(ix=[0,1]) mirror([ix,0,0]) for(iz=[0,20,40]) {
             rotate([-75,0,0]) translate([should_wid_true-15,0,-50]) {
                 translate([0,135-15,0]) {
                     translate([-iz*cos(22.5),-(40-iz)*sin(22.5),0]) hull() rotate([0,0,90]) cylinder_oh(3,200);
@@ -496,7 +504,7 @@ module torso_assmbly() difference() {
     //cutouts for screws for interface from torso to neckring spacer
     for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,0,7.5]) {
         rotate([-15,0,0]) translate([0,40,0]) {
-            neck_space_mag_co();
+            neck_space_mag_co(undef,false) neck_space_mag_screw_co();
         }
     }
             
@@ -520,30 +528,42 @@ module torso_assmbly() difference() {
     }
 }
 
-module lateral_joining_tab() translate([0,0,-8*cos(should_ang)]) difference() {
+module lateral_joining_tab_a() {
+    int_lateral_joining_tab() {
+        //tabs for A segments
+        hull() for(ixm=[0,1]) mirror([ixm,0,0]) rotate([-75,0,0]) {
+            for(iz=[0,-35]) translate([7.5,135+iz,-50]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
+        }
+    }
+}
+
+module lateral_joining_tab_c() {
+    int_lateral_joining_tab() {
+        //tabs for C segments
+        hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
+            rotate([-10,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
+            rotate([asin((-8*cos(should_ang)-7.5-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
+        }
+    }
+}
+
+module lateral_joining_tab_d() {
+    int_lateral_joining_tab() {
+        //tabs for D segments
+        hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
+            rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,200);
+            rotate([15,0,0]) translate([7.5,0,-125]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,200);
+        }
+    }
+}
+
+module int_lateral_joining_tab() translate([0,0,-8*cos(should_ang)]) difference() {
     intersection() {
         torso_shape(2.4);
         torso_shape_intersect(0);
         
         //positive shape for tabs joining lateral sides
-        union() {
-            //tabs for A segments
-            *hull() for(ixm=[0,1]) mirror([ixm,0,0]) rotate([-75,0,0]) {
-                for(iz=[0,-35]) translate([7.5,135+iz,-50]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
-            }
-            
-            //tabs for C segments
-            hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
-                rotate([-10,0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
-                rotate([asin((-8*cos(should_ang)-7.5-7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,250);
-            }
-            
-            //tabs for D segments
-            *hull() for(ixm=[0,1]) mirror([ixm,0,0]) translate([0,(back_rad-back_dep),-back_hgt]) {
-                rotate([asin((-8*cos(should_ang)+15+15+7.5)/back_rad),0,0]) translate([7.5,0,0]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,200);
-                rotate([15,0,0]) translate([7.5,0,-125]) rotate([90,0,0]) rotate([0,0,90]) cylinder_oh(7.5-0.2,200);
-            }
-        }
+        children();
     }
     
     //cutout the inside
@@ -863,6 +883,80 @@ module back_upper_cs(outset=0) hull() {
         //protrusion near top of shoulder blade
         rotate([0,0,-atan((back_hgt2-should_rad)/(back_rad-back_dep))+asin(30/back_rad)]) translate([0,-(back_rad-50)]) rotate([0,0,-atan((back_hgt2-should_rad)/(back_rad-back_dep))+asin(30/back_rad)]) {
             circle(r=50+5+outset,$fn=$fn*4);
+        }
+    }
+}
+
+
+module interface_plate() difference() {
+    bev_xs = 0.25;
+    
+    clr_h = 0.2;
+    
+    port_boss_or = 12.5-clr_h;
+    port_boss_ir = port_boss_or-1.6;
+    port_boss_h = 8;
+    
+    union() {
+        torso_plss_port_plane() {
+            //recess for interface plate
+            hull() for(ix=[-1,1]*(20+15+15)) for(iy=[-1,1]*15/cos(asin((back_hgt-strap_wid*sin(25)-60)/(back_rad+8+10)))) translate([ix,iy,-2]) {
+                cylinder(r=5+2.5-bev_s,h=2);
+                translate([0,0,bev_s]) cylinder(r=5+2.5,h=2-2*bev_s);
+            }
+        }
+        
+        //main port bosses
+        for(ix2=[-1,1]*(20+15)) hull() for(ib=[0,bev_s]) intersection() {
+            translate([0,0,-60]) translate([ix2,0,0])rotate([90,0,0]) rotate([0,0,90]) cylinder(r=port_boss_or-ib,h=200);
+            torso_plss_port_plane() translate([0,0,-2-port_boss_h+(bev_s-ib)]) cylinder(r=150,h=2+port_boss_h-(bev_s-ib));
+        }
+        //fillet
+        for(ix2=[-1,1]*(20+15)) hull() for(ib=[0,bev_xs]) intersection() {
+            translate([0,0,-60]) translate([ix2,0,0])rotate([90,0,0]) rotate([0,0,90]) cylinder(r=port_boss_or+ib,h=200);
+            torso_plss_port_plane() translate([0,0,-(2+(bev_xs-ib))]) cylinder(r=150,h=2+(bev_xs-ib));
+        }
+    }
+    
+    //main port cutouts
+    for(ix2=[-1,1]*(20+15)) {
+        translate([0,0,-60]) translate([ix2,0,0])rotate([90,0,0]) rotate([0,0,90]) cylinder(r=port_boss_ir,h=200);
+    }
+    //outer bevel
+    for(ix2=[-1,1]*(20+15)) hull() for(ib=[0,bev_s]) intersection() {
+        translate([0,0,-60]) translate([ix2,0,0])rotate([90,0,0]) rotate([0,0,90]) cylinder(r=port_boss_ir+ib,h=200);
+        torso_plss_port_plane() translate([0,0,-(bev_s-ib)]) cylinder(r=150,h=50);
+    }
+    
+    //bolt holes
+    for(ix2=[-1,1]*(20+15)) translate([ix2,0,0]) {
+        for(ix=[-15,15]) for(iz=[-15,15]) translate([ix,0,0]) {
+            torso_plss_port_plane(false,iz) translate([0,0,-100]) cylinder(r=3+0.2,h=200);
+            
+            //outer bevel
+            hull() for(ib=[0,bev_s]) intersection() {
+                torso_plss_port_plane(false,iz) translate([0,0,-100]) cylinder(r=3+0.2+ib,h=200);
+                torso_plss_port_plane() translate([0,0,-(bev_s-ib)]) cylinder(r=150,h=50);
+            }
+            //inner bevel
+            hull() for(ib=[0,bev_s]) intersection() {
+                torso_plss_port_plane(false,iz) translate([0,0,-100]) cylinder(r=3+0.2+ib,h=200);
+                torso_plss_port_plane() translate([0,0,-50-2+(bev_s-ib)]) cylinder(r=150,h=50);
+            }
+        }
+    }
+    
+    torso_plss_port_plane() {
+        //screw holes to mount interface plate
+        for(ix=[-1,1]*(7.5)) for(iy=[-1,1]*15) translate([ix,iy,0]) {
+            translate([0,0,0]) hull() rotate([0,0,90]) {
+                cylinder(r=3,h=50);
+                translate([0,0,-3]) cylinder(r=0.01,h=50);
+            }
+            translate([0,0,-2]) hull() rotate([0,0,90]) {
+                cylinder(r=1.25+bev_s,h=50);
+                translate([0,0,-bev_s]) cylinder(r=1.25,h=50);
+            }
         }
     }
 }
