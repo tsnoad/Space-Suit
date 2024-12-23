@@ -4,7 +4,6 @@ $fn = 144;
 
 
 use <PLSS Torso Shared Modules.scad>;
-//include <Torso Mk 3.scad>;
 
 
 //Oring seal parameters
@@ -29,8 +28,8 @@ bev_s = 0.4;
 bev_xs = 0.2;
 
 
-
-/*union() {
+/*
+union() {
     //origin is crest of shoulder
     should_rad = 30; //radius of crest
     should_ang = 25; //downward slope of shoulders to side
@@ -43,30 +42,19 @@ bev_xs = 0.2;
     back_rad = (pow(back_dep,2) + pow(back_hgt2-should_rad,2) - pow(should_rad,2)) / (2 * (back_dep - should_rad));
 
     outset = 7.5;
-
-    translate([0,0,outset+5]) rotate([-(180+15),0,0]) {
-        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 A.stl");
-        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 B.stl");
-        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 C.stl");
-    }
-    for(im=[0,1]) mirror([im,0,0]) rotate([0,-(90+25),0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 D.stl");
-    rotate([-(15+15),0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 E.stl");
-    rotate([--15,0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 F.stl");
-    
-    
-    rotate([-(180+asin(75/back_rad)),0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 G.stl");
-    rotate([--15,0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 H.stl");
-    rotate([-(-90-15),0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 3 I.stl");
     
     translate([0,0,--8*cos(should_ang)]) { 
         import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 D.stl");
         import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 CR.stl");
         import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 B.stl");
         import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 A.stl");
+        
+        mirror([1,0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 D.stl");
+        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 CL.stl");
+        mirror([1,0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 B.stl");
+        mirror([1,0,0]) import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/Torso Mk 4 A.stl");
     }
-}*/
-
-
+}
 
 use <../PLSS Components/Gas Bottle.scad>;
 use <../PLSS Components/PLSS Scrubber.scad>;
@@ -74,7 +62,7 @@ use <../PLSS Components/Heat Exchanger.scad>;
 
 
 //component layouts
-translate([0,-100,-150-20]) {
+*translate([0,-100,-150-20]) {
     rotate([0,0,180]) {
         translate([-130,80,112.5]) bottle_reg();
         #translate([-150,100,-230]) flowvalve();
@@ -102,12 +90,12 @@ translate([0,-100,-150-20]) {
         }
     }
 }
-
+*/
 
 
 corn_rad = 50; //radius of conrners
 corn_bev = 40; //as well as radius corners have a diagonal section
-corn_bev_btm = 10; //which is smaller on the bottom
+
 
 pack_widh = 360/2;
 pack_hgth = 500/2;
@@ -116,145 +104,227 @@ pack_thk = 125;
 //seg_hgth = 105/pack_hgth; 
 //seam_y = seg_hgth*(pack_hgth-corn_bev-corn_rad); //location of horizontal seam
 seam_y = 67.2; //location of horizontal seam
-seam_y_btm = seam_y+30; //longer on the bottom
 
 seam_y_bev0 = (pack_hgth-corn_bev-corn_rad);
 seam_x_bev0 = (pack_widh-corn_bev-corn_rad); //location of most common vertical seam - at the start of the diagonal bevel
 
+corn_rad_btm = 30; //sharper corner on the bottom
+corn_bev_btm = 20; //sharper corner on the bottom
+
+seam_y_btm = seam_y+30; //longer on the bottom
+
+seam_y_bev0_btm = (pack_hgth-corn_bev_btm-corn_rad_btm);
+seam_x_bev0_btm = (pack_widh-corn_bev_btm-corn_rad_btm);
 
 //scallop cutout in back for better fit
 scal_widh = pack_widh-10-20 - 40;
 scal_dep = 20;
 scal_rad = (pow(scal_widh,2) + pow(scal_dep,2)) / (2*scal_dep);
+
+
+include <PLSS Backplate.scad>;
+
+
+/* Set up parts for export using the makefile */
+*/* make 'PLSS A' */ plss_segment(0,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS B' */ plss_segment(1,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS C' */ plss_segment(2,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS D' */ plss_segment(3,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS E' */ plss_segment(4,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS F' */ plss_segment(5,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS G' */ plss_segment(6,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS H' */ plss_segment(0+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS I' */ plss_segment(1+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS J' */ plss_segment(2+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS K' */ plss_segment(3+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS L' */ plss_segment(4+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS M' */ plss_segment(5+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+*/* make 'PLSS N' */ plss_segment(6+7,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+
+*/* make 'PLSS Backplate A' */ backplate_segment_a();
+*/* make 'PLSS Backplate B' */ backplate_segment_b();
+*/* make 'PLSS Backplate C' */ backplate_segment_c();
+
+*/* make 'PLSS Backplate D' */ backplate_tab_horizvert(true);
+*/* make 'PLSS Backplate E' */ for(iy=[0:3]) translate([0,iy*(20+2),0]) backplate_tab_horiz(true);
+!/* make 'PLSS Backplate F' */ for(ix=[0:1]) translate([ix*(20+2),0,0]) backplate_tab_vert(true);
+
+
+translate([0,-100,-150-20]) rotate([90,0,0]) {
+    *plss_segment(undef,[1,1,1,1,1,1,1,1,1,1,1,1,1,1]);
+
+    for(ixm=[0,1]) mirror([ixm,0,0]) {
+        backplate_segment_a();
+        backplate_segment_b();
+        backplate_segment_c();
+    }
     
+    backplate_tab_horizvert();
+    for(ixm=[0,1]) mirror([ixm,0,0]) backplate_tab_horiz();
+    backplate_tab_vert();
+}
 
 
 
-
-
-show_segments = [
-    //top right
-    0, //A
-    0, //B
-    0, //C
+module plss_segment(only_index=undef,show_segments=[0,0,0,0,0,0,0,0,0,0,0,0,0,0]) difference() {
+    /*show_segments = [
+        //top right
+        0, //A
+        0, //B
+        0, //C
+        
+        //top left
+        0, //D
+        0, //E
+        0, //F
+        
+        //left side
+        1, //G
+        
+        //bottom left
+        1, //A (H)
+        1, //B (I)
+        1, //C (J)
+        
+        //bottom right
+        1, //D (K)
+        1, //E (L)
+        1, //F (M)
+        
+        //right side
+        1, //G (N)
+    ];*/
     
-    //top left
-    0, //D
-    0, //E
-    1, //F
-    
-    //left side
-    0, //G
-    
-    //bottom left
-    0, //A (H)
-    0, //B (I)
-    0, //C (J)
-    
-    //bottom right
-    0, //D (K)
-    0, //E (L)
-    0, //F (M)
-    
-    //right side
-    0, //G (N)
-];
-//show_segments = [1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+    show_segments = [
+        //top right
+        (only_index==0||!only_index), //A
+        (only_index==1||!only_index), //B
+        (only_index==2||!only_index), //C
+        
+        //top left
+        (only_index==3||!only_index), //D
+        (only_index==4||!only_index), //E
+        (only_index==5||!only_index), //F
+        
+        //left side
+        (only_index==6||!only_index), //G
+        
+        //bottom left
+        (only_index==0+7||!only_index), //A (H)
+        (only_index==1+7||!only_index), //B (I)
+        (only_index==2+7||!only_index), //C (J)
+        
+        //bottom right
+        (only_index==3+7||!only_index), //D (K)
+        (only_index==4+7||!only_index), //E (L)
+        (only_index==5+7||!only_index), //F (M)
+        
+        //right side
+        (only_index==6+7||!only_index), //G (N)
+    ];
 
-
-
-translate([0,-100,-150-20]) rotate([90,0,0]) !difference() {
-    for(is=[0:13]) if(show_segments[is]) {
-        difference() {
-            union() {
-                difference() {
-                    //body positive
-                    hull() for(ib=[0,0.4]) intersection() {
-                        plss_shape_pos(-(0.4-ib));
-                        segment_intersect(is,ib,ib);
-                    }
-                    //cutout internal
-                    plss_shape_pos(-5,-5);
-                    //bottom bevels on inside cutout
-                    hull() for(ib=[0,0.4]) intersection() {
-                        plss_shape_pos(-5+(0.4-ib),-5);
-                        segment_btm_bev_intersect(is,ib-0.01);
-                    }
-                    //top bevels on inside cutout
-                    hull() for(ib=[0,0.4]) intersection() {
-                        plss_shape_pos(-5+(0.4-ib),-5);
-                        segment_top_bev_intersect(is,ib-0.01);
-                    }
-                    
-                    /*intersection() {
+    union() {
+        //parts already printed
+        /*import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/PLSS A.stl");
+        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/PLSS B.stl");
+        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/PLSS C.stl");
+        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/PLSS D.stl");
+        import("/Users/tsnoad/Desktop/3d Parts/MA-3 Helmet/Torso/PLSS F.stl");*/
+        
+        for(is=[0:13]) if(show_segments[is]) {
+            difference() {
+                union() {
+                    difference() {
+                        //body positive
+                        hull() for(ib=[0,0.4]) intersection() {
+                            plss_shape_pos(-(0.4-ib));
+                            segment_intersect(is,ib,ib);
+                        }
+                        //cutout internal
                         plss_shape_pos(-5,-5);
-                        segment_intersect(show_segments,-0.01,ib);
-                    }*/
-                    
-                    //recess for back lid plate
-                    plss_back_co();
-                }
-                
-                //PLSS-torso interface - internal
-                intersection() {
-                    translate([0,0,scal_dep+5+2.4]) rotate([-90,0,0]) translate([0,0,150+20]) port_interface_int();
-                    segment_intersect(is);
-                }
-                
-                //mounting stud grid
-                intersection() {
-                    union() {
-                        mnt_grid(is) cylinder(r1=7.5+25,r2=7.5,h=25);
+                        //bottom bevels on inside cutout
+                        hull() for(ib=[0,0.4]) intersection() {
+                            plss_shape_pos(-5+(0.4-ib),-5);
+                            segment_btm_bev_intersect(is,ib-0.01);
+                        }
+                        //top bevels on inside cutout
+                        hull() for(ib=[0,0.4]) intersection() {
+                            plss_shape_pos(-5+(0.4-ib),-5);
+                            segment_top_bev_intersect(is,ib-0.01);
+                        }
+                        
+                        /*intersection() {
+                            plss_shape_pos(-5,-5);
+                            segment_intersect(show_segments,-0.01,ib);
+                        }*/
+                        
+                        //recess for back lid plate
+                        plss_back_co();
                     }
+                    
+                    //PLSS-torso interface - internal
+                    intersection() {
+                        translate([0,0,scal_dep+5+2.4]) rotate([-90,0,0]) translate([0,0,150+20]) port_interface_int();
+                        segment_intersect(is);
+                    }
+                    
+                    //mounting stud grid
+                    intersection() {
+                        union() {
+                            mnt_grid(is) cylinder(r1=7.5+25,r2=7.5,h=25);
+                        }
+                        hull() for(ib=[0,0.4]) intersection() {
+                            plss_shape_pos(-(0.4-ib));
+                            segment_intersect(is,ib,ib);
+                        }
+                    }
+                    
+                    //scallop - positive
                     hull() for(ib=[0,0.4]) intersection() {
+                        plss_scal_co(-5+(0.4-ib));
                         plss_shape_pos(-(0.4-ib));
                         segment_intersect(is,ib,ib);
                     }
                 }
                 
-                //scallop - positive
+                //cutout the scallop
+                plss_scal_co(0);
+                //bottom bevel on outside
+                hull() for(ib=[0,0.4]) intersection() {
+                    plss_scal_co(-(0.4-ib));
+                    segment_btm_bev_intersect(is,ib-0.01);
+                }
+                //top bevel on outside
+                hull() for(ib=[0,0.4]) intersection() {
+                    plss_scal_co(-(0.4-ib));
+                    segment_top_bev_intersect(is,ib-0.01);
+                }
+                
+                //translate([0,0,50]) cylinder(r=1000,h=1000);
+            }
+            
+            //PLSS-torso interface positives
+            intersection() {
+                rotate([-90,0,0]) translate([0,100,150+20]) plss_torso_studs();
                 hull() for(ib=[0,0.4]) intersection() {
                     plss_scal_co(-5+(0.4-ib));
-                    plss_shape_pos(-(0.4-ib));
                     segment_intersect(is,ib,ib);
                 }
             }
             
-            //cutout the scallop
-            plss_scal_co(0);
-            //bottom bevel on outside
-            hull() for(ib=[0,0.4]) intersection() {
-                plss_scal_co(-(0.4-ib));
-                segment_btm_bev_intersect(is,ib-0.01);
-            }
-            //top bevel on outside
-            hull() for(ib=[0,0.4]) intersection() {
-                plss_scal_co(-(0.4-ib));
-                segment_top_bev_intersect(is,ib-0.01);
-            }
-            
-            //translate([0,0,50]) cylinder(r=1000,h=1000);
-        }
-        
-        //PLSS-torso interface positives
-        intersection() {
-            rotate([-90,0,0]) translate([0,100,150+20]) plss_torso_studs();
-            hull() for(ib=[0,0.4]) intersection() {
-                plss_scal_co(-5+(0.4-ib));
-                segment_intersect(is,ib,ib);
-            }
-        }
-        
-        //flanges
-        difference() {
-            flange_segment_intersect(is);
-            plss_scal_co(0);
-            hull() for(ib=[0,0.4]) intersection() {
-                plss_scal_co(-(0.4-ib));
-                segment_top_bev_intersect(is,ib-0.01);
+            //flanges
+            difference() {
+                flange_segment_intersect(is);
+                plss_scal_co(0);
+                hull() for(ib=[0,0.4]) intersection() {
+                    plss_scal_co(-(0.4-ib));
+                    segment_top_bev_intersect(is,ib-0.01);
+                }
             }
         }
     }
+    
+    //translate([0,0,50]) cylinder(r=500,h=100);
     
     //cutout for flange screws
     flange_screw_segment();
@@ -265,27 +335,60 @@ translate([0,-100,-150-20]) rotate([90,0,0]) !difference() {
     //PLSS-torso interface cutouts for screws, ports, nuts, etc
     rotate([-90,0,0]) translate([0,100,150+20]) torso_stud_cos();
     
-    
     //cutouts for heatset nuts to attach back lid plate
-    union() {
+    heatset_segment() back_heatset_co();
+    
+    //lightening cutouts
+    *for(ia=[0,1]) rotate([0,0,ia*180]) translate([0,ia*(seam_y_btm-seam_y),0]) {
+        translate([-pack_widh/2,-seam_y_btm+(seam_y+seam_y_btm)/2,-50]) hull() {
+            translate([-20,-50-5,0]) cylinder_oh(10,100);
+            for(ix=[-1,1]*2*50*tan(30)) translate([ix,50-5,0]) cylinder_oh(10,100);
+        }
+        
+        translate([-pack_widh+20,-seam_y_btm+(seam_y+seam_y_btm)/2,pack_thk/2]) rotate([0,-90,0]) hull() {
+            for(ix=[-1,1]*30) translate([ix,55,0]) cylinder_oh(5,100);
+            for(ix=[-1,1]*30) translate([ix,-55+2*30-10,0]) cylinder_oh(5,100);
+            for(ix=[-1]*30) translate([ix,-55-10,0]) cylinder_oh(5,100);
+        }
+    }
+}
+
+module heatset_segment() {
+    for(ia=[0,1]) rotate([0,0,ia*180]) {
+        corn_rad_act = (ia==0 ? corn_rad : corn_rad_btm);
+        corn_bev_act = (ia==0 ? corn_bev : corn_bev_btm);
+
+        seam_y_act = (ia==0 ? seam_y : seam_y_btm);
+
+        seam_y_bev0_act = (ia==0 ? seam_y_bev0 : seam_y_bev0_btm);
+        seam_x_bev0_act = (ia==0 ? seam_x_bev0 : seam_x_bev0_btm);
+    
         //A
-        translate([pack_widh-10-5-5,seam_y+(seam_y_bev0-(seam_y))/2,0]) rotate([0,0,0]) back_heatset_co();
+        translate([pack_widh-10-5-5,seam_y_act+(seam_y_bev0_act-(seam_y_act))/2,0]) rotate([0,0,0]) children();
+        
         //B
-        translate([seam_x_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45),seam_y_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45),0]) rotate([0,0,45]) back_heatset_co();
+        if(ia==0) translate([seam_x_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45),seam_y_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45),0]) rotate([0,0,45]) children();
+        
         //C
-        translate([seam_x_bev0/2,pack_hgth-10-5-5,0]) rotate([0,0,90]) back_heatset_co();
+        translate([seam_x_bev0_act/2,pack_hgth-10-5-5,0]) rotate([0,0,90]) children();
+        
         //D
-        translate([-seam_x_bev0/2,pack_hgth-10-5-5,0]) rotate([0,0,90]) back_heatset_co();
+        translate([-seam_x_bev0_act/2,pack_hgth-10-5-5,0]) rotate([0,0,90]) children();
+        
         //E
-        translate([-(seam_x_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45)),seam_y_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45),0]) rotate([0,0,-45]) back_heatset_co();
+        if(ia==0) translate([-(seam_x_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45)),seam_y_bev0+corn_bev/2+(corn_rad-10-5-5)*cos(45),0]) rotate([0,0,-45]) children();
+        
         //F
-        translate([-(pack_widh-10-5-5),seam_y+(seam_y_bev0-(seam_y))/2,0]) rotate([0,0,0]) back_heatset_co();
+        translate([-(pack_widh-10-5-5),seam_y_act+(seam_y_bev0_act-(seam_y_act))/2,0]) rotate([0,0,0]) children();
+        
+        //G
+        translate([-(pack_widh-10-5-5),(ia==0?1:-1)*(seam_y-seam_y_btm)/2,0]) rotate([0,0,0]) children();
     }
 }
 
 module back_heatset_co() {
     translate([0,0,pack_thk-20]) {
-        hull() rotate([0,0,90]) cylinder_oh(2.5-0.15,50);
+        hull() cylinder_oh(2.5-0.15,50);
         translate([0,0,20-5]) hull() {
             cylinder_oh(2.5-0.15+bev_s,50);
             translate([0,0,-bev_s]) cylinder_oh(2.5-0.15,50);
@@ -294,45 +397,78 @@ module back_heatset_co() {
 }
 
 module mnt_grid(only_index=undef) {
-    for(ia=[0,7]) rotate([0,0,(ia/7)*180]) {
+    rotate([0,0,(only_index>6?180:0)]) {
         //A
-        if(show_segments[0+ia]) {
+        if(search(only_index,[0])) {
             for(iy=[120]) for(ix=[120]) translate([ix,iy,(ix>=120?-5:0)]) children();
         }
+        
         //B
-        if(show_segments[1+ia]) {
+        if(search(only_index,[1])) {
             for(iy=[200]) for(ix=[120]) translate([ix,iy,(iy>=200?-10:(ix>=120?-5:0))]) rotate([0,0,45]) children();
         }
+        
         //C
-        if(show_segments[2+ia]) {
+        if(search(only_index,[2])) {
             for(iy=[160,200]) for(ix=[40]) translate([ix,iy,(iy>=200?-10:0)]) rotate([0,0,90]) children();
         }
+        
+        //D
+        if(search(only_index,[3])) {
+            for(iy=[200]) for(ix=[-40]) translate([ix,iy,(iy>=200?-10:0)]) rotate([0,0,90]) children();
+        }
+        
+        //E
+        
         //F
-        if(show_segments[5+ia]) {
+        if(search(only_index,[5])) {
             for(iy=[120]) for(ix=[80,120,160]) translate([-ix,iy,(ix>=120?-5:0)]) rotate([0,0,0]) children();
         }
+        
         //G
-        if(show_segments[6+ia]) {
-            for(iy=[-80,-40,0]) for(ix=[40,80,120,160]) translate([-ix,iy,(ix>=120?-5:0)]) children();
+        if(search(only_index,[6])) {
+            for(iy=[0,-40]) for(ix=[80,120,160]) translate([-ix,iy,(ix>=120?-5:0)]) rotate([0,0,0]) children();
+            for(iy=[-80]) for(ix=[120]) translate([-ix,iy,(ix>=120?-5:0)]) rotate([0,0,0]) children();
+        }
+        
+        //A (H)
+        //B (I)
+        
+        //C (J)
+        if(search(only_index,[2+7])) {
+            for(iy=[160,200]) for(ix=[40,80]) translate([ix,iy,(iy>=200?-10:0)]) rotate([0,0,90]) children();
+        }
+        
+        //D (K)
+        //E (L)
+        
+        //F (M)
+        if(search(only_index,[5+7])) {
+            for(iy=[120,160]) for(ix=[80,120,160]) translate([-ix,iy,(ix>=120?-5:0)]) rotate([0,0,0]) children();
+        }
+        
+        //G (N)
+        if(search(only_index,[6+7])) {
+            for(iy=[40,0,-40]) for(ix=[80,120,160]) translate([-ix,iy,(ix>=120?-5:0)]) rotate([0,0,0]) children();
         }
     }
 }
 
 module grid_screw_co() translate([0,0,25]) {
-        screw_len=8;
-        screw_dep=5;
-        inner_rot = 0;
-        
-        translate([0,0,-screw_dep]) hull() {
-            cylinder_oh_opt(1.25-0.5,20,true,inner_rot);
-            translate([0,0,0.5]) cylinder_oh_opt(1.25,20,true,inner_rot);
-            translate([0,0,screw_dep]) cylinder_oh_opt(1.25+0.1,20,true,inner_rot);
-        }
-        
-        translate([0,0,-0.01]) hull() {
-            translate([0,0,-(1.5+0.15-1.25)]) cylinder_oh_opt(1.25,20,true,inner_rot);
-            cylinder_oh_opt(1.5+0.15,20,true,inner_rot);
-        }
+    screw_len=8;
+    screw_dep=5;
+    inner_rot = 0;
+    
+    translate([0,0,-screw_dep]) hull() {
+        cylinder_oh_opt(1.25-0.5,20,true,inner_rot);
+        translate([0,0,0.5]) cylinder_oh_opt(1.25,20,true,inner_rot);
+        translate([0,0,screw_dep]) cylinder_oh_opt(1.25+0.1,20,true,inner_rot);
+    }
+    
+    translate([0,0,-0.01]) hull() {
+        translate([0,0,-(1.5+0.15-1.25)]) cylinder_oh_opt(1.25,20,true,inner_rot);
+        cylinder_oh_opt(1.5+0.15,20,true,inner_rot);
+    }
 }
 
 
@@ -361,115 +497,143 @@ module segment_intersect(only_index=undef,btm_inset=0,top_inset=0) {
             [-pack_widh,pack_hgth],
         ]);
     }*/
+    
+    corn_rad_act = (only_index<7 ? corn_rad : corn_rad_btm);
+    corn_bev_act = (only_index<7 ? corn_bev : corn_bev_btm);
+
+    seam_y_act = (only_index<7 ? seam_y : seam_y_btm);
+
+    seam_y_bev0_act = (only_index<7 ? seam_y_bev0 : seam_y_bev0_btm);
+    seam_x_bev0_act = (only_index<7 ? seam_x_bev0 : seam_x_bev0_btm);
         
     rotate([0,0,(only_index>6?180:0)]) {
         //A
         if(search(only_index,0*[1,1]+[0,7])) intersection() {
-            translate([seam_x_bev0,seam_y+btm_inset,-50]) cube([(corn_bev+corn_rad),200,200]);
+            translate([seam_x_bev0_act,seam_y_act+btm_inset,-50]) cube([(corn_bev_act+corn_rad_act),200,200]);
             
-            translate([seam_x_bev0,seam_y_bev0-corn_bev,-50]) rotate([0,0,45]) translate([-100,-200-top_inset,0]) cube([400,200,200]);
+            translate([seam_x_bev0_act,seam_y_bev0_act-corn_bev_act,-50]) rotate([0,0,45]) translate([-100,-200-top_inset,0]) cube([400,200,200]);
         }
         
         //B
         if(search(only_index,1*[1,1]+[0,7])) intersection() {
-            translate([seam_x_bev0,seam_y_bev0-corn_bev,-50]) rotate([0,0,45]) translate([-100,btm_inset,0]) cube([400,200,200]);
+            translate([seam_x_bev0_act,seam_y_bev0_act-corn_bev_act,-50]) rotate([0,0,45]) translate([-100,btm_inset,0]) cube([400,200,200]);
             
-            translate([seam_x_bev0+top_inset,seam_y_bev0-corn_bev,-50]) cube([(corn_bev+corn_rad)-btm_inset-top_inset,200,200]);
+            translate([seam_x_bev0_act+top_inset,seam_y_bev0_act-corn_bev_act,-50]) cube([(corn_bev_act+corn_rad_act)-btm_inset-top_inset,200,200]);
         }
         
         //C
         if(search(only_index,2*[1,1]+[0,7])) {
-            translate([top_inset,seam_y,-50]) cube([seam_x_bev0-btm_inset-top_inset,pack_hgth-seam_y,200]);
+            translate([top_inset,seam_y_act,-50]) cube([seam_x_bev0_act-btm_inset-top_inset,pack_hgth-seam_y_act,200]);
         }
         
         //D
         if(search(only_index,3*[1,1]+[0,7])) intersection() {
-            translate([-pack_widh,seam_y_bev0,-50]) cube([pack_widh-btm_inset,pack_hgth-seam_y_bev0,200]);
+            translate([-pack_widh,seam_y_bev0_act,-50]) cube([pack_widh-btm_inset,pack_hgth-seam_y_bev0_act,200]);
             
-            translate([-seam_x_bev0+corn_bev,seam_y_bev0,-50]) rotate([0,0,45]) translate([top_inset,-100,0]) cube([200,400,200]);
+            translate([-seam_x_bev0_act+corn_bev_act,seam_y_bev0_act,-50]) rotate([0,0,45]) translate([top_inset,-100,0]) cube([200,400,200]);
         }
         
         //E
         if(search(only_index,4*[1,1]+[0,7])) intersection() {
-            translate([-seam_x_bev0+corn_bev,seam_y_bev0,-50]) rotate([0,0,45]) translate([-200-btm_inset,-100,0]) cube([200,400,200]);
-            translate([-pack_widh,seam_y_bev0+top_inset,-50]) cube([pack_widh-(seam_x_bev0-corn_bev),pack_hgth-seam_y_bev0-top_inset,200]);
+            translate([-seam_x_bev0_act+corn_bev_act,seam_y_bev0_act,-50]) rotate([0,0,45]) translate([-200-btm_inset,-100,0]) cube([200,400,200]);
+            translate([-pack_widh,seam_y_bev0_act+top_inset,-50]) cube([pack_widh-(seam_x_bev0_act-corn_bev_act),pack_hgth-seam_y_bev0_act-top_inset,200]);
         }
         
         //F
         if(search(only_index,5*[1,1]+[0,7])) {
-            translate([-pack_widh,seam_y+top_inset,-50]) cube([pack_widh,seam_y_bev0-seam_y-btm_inset-top_inset,200]);
+            translate([-pack_widh,seam_y_act+top_inset,-50]) cube([pack_widh,seam_y_bev0_act-seam_y_act-btm_inset-top_inset,200]);
         }
         
         //G
         if(search(only_index,6*[1,1]+[0,7])) {
-            translate([-pack_widh,-(only_index<7?seam_y_btm:seam_y)+top_inset,-50]) cube([pack_widh,seam_y+seam_y_btm-btm_inset-top_inset,200]);
+            seam_y_opp = (only_index<7 ? seam_y_btm : seam_y);
+    
+            translate([-pack_widh,-seam_y_opp+top_inset,-50]) cube([pack_widh,(seam_y+seam_y_btm)-btm_inset-top_inset,200]);
         }
     }
 }
     
 module segment_btm_bev_intersect(only_index=undef,btm_inset=0) {
+    corn_rad_act = (only_index<7 ? corn_rad : corn_rad_btm);
+    corn_bev_act = (only_index<7 ? corn_bev : corn_bev_btm);
+
+    seam_y_act = (only_index<7 ? seam_y : seam_y_btm);
+
+    seam_y_bev0_act = (only_index<7 ? seam_y_bev0 : seam_y_bev0_btm);
+    seam_x_bev0_act = (only_index<7 ? seam_x_bev0 : seam_x_bev0_btm);
+    
     rotate([0,0,(only_index>6?180:0)]) {
         //A
-        if(search(only_index,0*[1,1]+[0,7])) intersection() {
-            translate([seam_x_bev0,seam_y+btm_inset,-50]) cube([(corn_bev+corn_rad),0.01,200]);
+        if(search(only_index,0*[1,1]+[0,7])) {
+            translate([seam_x_bev0_act,seam_y_act+btm_inset,-50]) cube([(corn_bev_act+corn_rad_act),0.01,200]);
         }
         
         //B
         if(search(only_index,1*[1,1]+[0,7])) intersection() {
-            translate([seam_x_bev0,seam_y_bev0-corn_bev,-50]) rotate([0,0,45]) translate([-100,btm_inset,0]) cube([400,0.01,200]);
+            translate([seam_x_bev0_act,seam_y_bev0_act-corn_bev_act,-50]) rotate([0,0,45]) translate([-100,btm_inset,0]) cube([400,0.01,200]);
         }
         
         //C
         if(search(only_index,2*[1,1]+[0,7])) {
-            translate([seam_x_bev0-btm_inset,seam_y,-50]) cube([0.01,pack_hgth-seam_y,200]);
+            translate([seam_x_bev0_act-btm_inset,seam_y_act,-50]) cube([0.01,pack_hgth-seam_y_act,200]);
         }
         
         //D
         if(search(only_index,3*[1,1]+[0,7])) {
-            translate([-btm_inset,seam_y_bev0,-50]) cube([0.01,pack_hgth-seam_y_bev0,200]);
+            translate([-btm_inset,seam_y_bev0_act,-50]) cube([0.01,pack_hgth-seam_y_bev0_act,200]);
         }
         
         //E
         if(search(only_index,4*[1,1]+[0,7])) intersection() {
-            translate([-seam_x_bev0+corn_bev,seam_y_bev0,-50]) rotate([0,0,45]) translate([-btm_inset,-100,0]) cube([0.01,400,200]);
+            translate([-seam_x_bev0_act+corn_bev_act,seam_y_bev0_act,-50]) rotate([0,0,45]) translate([-btm_inset,-100,0]) cube([0.01,400,200]);
         }
         
         //F
         if(search(only_index,5*[1,1]+[0,7])) {
-            translate([-pack_widh,seam_y_bev0-btm_inset,-50]) cube([pack_widh,0.01,200]);
+            translate([-pack_widh,seam_y_bev0_act-btm_inset,-50]) cube([pack_widh,0.01,200]);
         }
         
         //G
         if(search(only_index,6*[1,1]+[0,7])) {
-            translate([-pack_widh,(only_index<7?seam_y:seam_y_btm)-btm_inset,-50]) cube([pack_widh,0.01,200]);
+            seam_y_opp = (only_index<7 ? seam_y_btm : seam_y);
+    
+            translate([-pack_widh,seam_y_act-btm_inset,-50]) cube([pack_widh,0.01,200]);
         }
     }
 }
 module segment_top_bev_intersect(only_index=undef,top_inset=0) {
+    corn_rad_act = (only_index<7 ? corn_rad : corn_rad_btm);
+    corn_bev_act = (only_index<7 ? corn_bev : corn_bev_btm);
+
+    seam_y_act = (only_index<7 ? seam_y : seam_y_btm);
+
+    seam_y_bev0_act = (only_index<7 ? seam_y_bev0 : seam_y_bev0_btm);
+    seam_x_bev0_act = (only_index<7 ? seam_x_bev0 : seam_x_bev0_btm);
+    
     rotate([0,0,(only_index>6?180:0)]) {
         //A
-        if(search(only_index,0*[1,1]+[0,7])) intersection() {
-            translate([seam_x_bev0,seam_y_bev0-corn_bev,-50]) rotate([0,0,45]) translate([-100,0.01-top_inset,0]) cube([400,0.01,200]);
+        if(search(only_index,0*[1,1]+[0,7])) {
+            translate([seam_x_bev0_act,seam_y_bev0_act-corn_bev_act,-50]) rotate([0,0,45]) translate([-100,0.01-top_inset,0]) cube([400,0.01,200]);
         }
         
         //B
         if(search(only_index,1*[1,1]+[0,7])) intersection() {
-            translate([seam_x_bev0+top_inset,seam_y_bev0-corn_bev,-50]) cube([0.01,200,200]);
+            translate([seam_x_bev0_act+top_inset,seam_y_bev0_act-corn_bev_act,-50]) cube([0.01,200,200]);
         }
         
         //C
         if(search(only_index,2*[1,1]+[0,7])) {
-            translate([top_inset,seam_y,-50]) cube([0.01,pack_hgth-seam_y,200]);
+            translate([top_inset,seam_y_act,-50]) cube([0.01,pack_hgth-seam_y_act,200]);
         }
         
         //D
         if(search(only_index,3*[1,1]+[0,7])) {
-            translate([-seam_x_bev0+corn_bev,seam_y_bev0,-50]) rotate([0,0,45]) translate([top_inset,-100,0]) cube([0.01,400,200]);
+            translate([-seam_x_bev0_act+corn_bev_act,seam_y_bev0_act,-50]) rotate([0,0,45]) translate([top_inset,-100,0]) cube([0.01,400,200]);
         }
         
         //E
         if(search(only_index,4*[1,1]+[0,7])) intersection() {
-            translate([-pack_widh,seam_y_bev0+top_inset,-50]) cube([pack_widh-(seam_x_bev0-corn_bev),0.01,200]);
+            translate([-pack_widh,seam_y_bev0_act+top_inset,-50]) cube([pack_widh-(seam_x_bev0_act-corn_bev_act),0.01,200]);
         }
         
         //F
@@ -479,37 +643,50 @@ module segment_top_bev_intersect(only_index=undef,top_inset=0) {
         
         //G
         if(search(only_index,6*[1,1]+[0,7])) {
-            translate([-pack_widh,-(only_index<7?seam_y_btm:seam_y)-top_inset,-50]) cube([pack_widh,0.01,200]);
+            seam_y_opp = (only_index<7 ? seam_y_btm : seam_y);
+    
+            translate([-pack_widh,-seam_y_opp-top_inset,-50]) cube([pack_widh,0.01,200]);
         }
     }
 }
 
 module flange_segment_intersect(only_index=undef) difference() {
+    corn_rad_act = (only_index<7 ? corn_rad : corn_rad_btm);
+    corn_bev_act = (only_index<7 ? corn_bev : corn_bev_btm);
+
+    seam_y_act = (only_index<7 ? seam_y : seam_y_btm);
+
+    seam_y_bev0_act = (only_index<7 ? seam_y_bev0 : seam_y_bev0_btm);
+    seam_x_bev0_act = (only_index<7 ? seam_x_bev0 : seam_x_bev0_btm);
+    
     intersection() {
         rotate([0,0,(only_index>6?180:0)]) {
             //A
-            if(search(only_index,0*[1,1]+[0,7])) flange_int_shape([(pack_widh-corn_rad),seam_y_bev0,0],45,corn_bev/cos(45),true);
+            if(search(only_index,0*[1,1]+[0,7])) flange_int_shape([(pack_widh-corn_rad_act),seam_y_bev0_act,0],45,corn_bev_act/cos(45),true,corn_rad_act);
             
             //B
-            if(search(only_index,1*[1,1]+[0,7])) flange_int_shape([seam_x_bev0,(pack_hgth-corn_rad),0],90,(corn_bev+corn_bev),true);
+            if(search(only_index,1*[1,1]+[0,7])) flange_int_shape([seam_x_bev0_act,(pack_hgth-corn_rad_act),0],90,(corn_bev_act+corn_bev_act),true,corn_rad_act);
             
             //C
-            if(search(only_index,2*[1,1]+[0,7])) flange_int_shape([0,(pack_hgth-corn_rad),0],90,seam_y_bev0-seam_y+corn_bev-65);
+            if(search(only_index,2*[1,1]+[0,7])) flange_int_shape([0,(pack_hgth-corn_rad_act),0],90,seam_y_bev0_act-seam_y_act+corn_bev_act-(only_index<7?65:0),false,corn_rad_act);
             
             //D
-            if(search(only_index,3*[1,1]+[0,7])) flange_int_shape([-seam_x_bev0,(pack_hgth-corn_rad),0],135,corn_bev/cos(45),true);
+            if(search(only_index,3*[1,1]+[0,7])) flange_int_shape([-seam_x_bev0_act,(pack_hgth-corn_rad_act),0],135,corn_bev_act/cos(45),true,corn_rad_act);
             
-            if(search(only_index,4*[1,1]+[0,7])) flange_int_shape([-(pack_widh-corn_rad),seam_y_bev0,0],180,(corn_bev+corn_bev),true);
+            //E
+            if(search(only_index,4*[1,1]+[0,7])) flange_int_shape([-(pack_widh-corn_rad_act),seam_y_bev0_act,0],180,(corn_bev_act+corn_bev_act),true,corn_rad_act);
             
             //F
-            if(search(only_index,5*[1,1]+[0,7])) flange_int_shape([-(pack_widh-corn_rad),seam_y,0],180,pack_widh-corn_rad-55);
+            if(search(only_index,5*[1,1]+[0,7])) flange_int_shape([-(pack_widh-corn_rad_act),seam_y_act,0],180,pack_widh-corn_rad_act-(only_index<7?55:0),false,corn_rad_act);
             
             //G
             if(search(only_index,6*[1,1]+[0,7])) {
-                flange_int_shape([-(pack_widh-corn_rad),-(only_index<7?seam_y_btm:seam_y),0],180,pack_widh-corn_rad-55);
+                seam_y_opp = (only_index<7 ? seam_y_btm : seam_y);
+            
+                flange_int_shape([-(pack_widh-corn_rad_act),-seam_y_opp,0],180,pack_widh-corn_rad_act-(only_index<7?0:55),false,corn_rad_act);
                 
                 //lateral flange
-                flange_int_side_shape([0,seam_y,0],seam_y);
+                flange_int_side_shape([0,seam_y_act,0],(seam_y+seam_y_btm)/2-20);
             }
         }
         
@@ -532,7 +709,7 @@ module flange_segment_intersect(only_index=undef) difference() {
     
 }
 
-module flange_int_shape(flange_cent=[0,0,0],flange_rot=0,flange_len=pack_widh-corn_rad,flange_crn_diag=false) {
+module flange_int_shape(flange_cent=[0,0,0],flange_rot,flange_len,flange_crn_diag,corn_rad) {
     flange_y = [-5+5,15-5];
     
     hull() {
@@ -666,14 +843,25 @@ module position_screw_on_scal(screw_x,screw_y,inner_rot=0,outer_rot=0) {
 }
 
 module flange_screw_segment() {
+    
     for(ia=[0,1]) rotate([0,0,ia*180]) {
+        only_index = ia * 7;
+        
+        corn_rad_act = (only_index<7 ? corn_rad : corn_rad_btm);
+        corn_bev_act = (only_index<7 ? corn_bev : corn_bev_btm);
+
+        seam_y_act = (only_index<7 ? seam_y : seam_y_btm);
+
+        seam_y_bev0_act = (only_index<7 ? seam_y_bev0 : seam_y_bev0_btm);
+        seam_x_bev0_act = (only_index<7 ? seam_x_bev0 : seam_x_bev0_btm);
+    
         //A
-        translate([(pack_widh-corn_rad),seam_y_bev0,0]) rotate([0,0,45]) flange_screws(-45,0,-15);
+        translate([(pack_widh-corn_rad_act),seam_y_bev0_act,0]) rotate([0,0,45]) flange_screws(corn_rad_act,-45,0,(only_index<7?-15:5));
         
         //B
-        translate([seam_x_bev0,(pack_hgth-corn_rad),0]) rotate([0,0,90]) flange_screws(-45,0);
+        translate([seam_x_bev0_act,(pack_hgth-corn_rad_act),0]) rotate([0,0,90]) flange_screws(corn_rad_act,-45,0);
         //dont replace this, it doesnt line up with already printed parts
-        translate([0,(pack_hgth-corn_rad),0]) rotate([0,0,90]) {
+        if(only_index<7) translate([0,(pack_hgth-corn_rad),0]) rotate([0,0,90]) {
             for(iy=[pack_hgth-85]) {
                 iy2 = iy-70;
                 ix2 = 2*7.5-seam_x_bev0;
@@ -688,9 +876,9 @@ module flange_screw_segment() {
         //#position_screw_on_scal(seam_x_bev0-7.5,pack_hgth-85,90,90);
         
         //C
-        translate([0,(pack_hgth-corn_rad),0]) rotate([0,0,90]) {
-            flange_screws(0,0);
-            //dont replace this, it doesnt line up with already printed parts
+        translate([0,(pack_hgth-corn_rad_act),0]) rotate([0,0,90]) flange_screws(corn_rad_act,0,0);
+        //dont replace this, it doesnt line up with already printed parts
+        if(only_index<7) translate([0,(pack_hgth-corn_rad),0]) rotate([0,0,90]) {
             for(iy=[
                 //seam_y+(seam_y_bev0-seam_y)/2,
                 //pack_hgth-(corn_bev+corn_rad)
@@ -705,22 +893,29 @@ module flange_screw_segment() {
                 }
             }
         }
-        //position_screw_on_scal(-7.5,pack_hgth-75,90,90);
+        if(only_index>=7) {
+            position_screw_on_scal(-7.5,seam_y_act+15+15,90,90);
+            position_screw_on_scal(-7.5,seam_y_bev0_act-25,90,90);
+        }
         
         //D
-        translate([-seam_x_bev0,(pack_hgth-corn_rad),0]) rotate([0,0,135]) flange_screws(-45,0,-15);
+        translate([-seam_x_bev0_act,(pack_hgth-corn_rad_act),0]) rotate([0,0,135]) flange_screws(corn_rad_act,-45,0,(only_index<7?-15:5));
         
         //E
-        translate([-(pack_widh-corn_rad),seam_y_bev0,0]) rotate([0,0,180]) flange_screws(-45,0);
-        position_screw_on_scal(-(pack_widh-80),seam_y_bev0-7.5,-45,0);
+        translate([-(pack_widh-corn_rad_act),seam_y_bev0_act,0]) rotate([0,0,180]) flange_screws(corn_rad_act,-45,0);
+        if(only_index<7) position_screw_on_scal(-(pack_widh-80),seam_y_bev0_act-7.5,-45,0);
         
         //F
-        translate([-(pack_widh-corn_rad),seam_y,0]) rotate([0,0,180]) flange_screws(0,0);
-        position_screw_on_scal(-(ia==0?85:75),seam_y-7.5,0,0);
+        translate([-(pack_widh-corn_rad_act),seam_y_act,0]) rotate([0,0,180]) flange_screws(corn_rad_act,0,0);
+        if(only_index<7) position_screw_on_scal(-85,seam_y_act-7.5,0,0);
+        if(only_index>=7) {
+            position_screw_on_scal(-(15+15),seam_y_act-7.5,0,0);
+            position_screw_on_scal(-(100),seam_y_act-7.5,0,0);
+        }
         
         //G
-        translate([-(pack_widh-corn_rad),-(ia==0?seam_y_btm:seam_y),0]) rotate([0,0,180]) {
-            flange_screws(0,0);
+        /*translate([-(pack_widh-corn_rad),-(ia==0?seam_y_btm:seam_y),0]) rotate([0,0,180]) {
+            flange_screws(corn_rad_act,0,0);
             for(ix=[
                 (ia==0?seam_x_bev0/2:85),
                 (ia==0?seam_x_bev0/2:105),
@@ -729,20 +924,25 @@ module flange_screw_segment() {
                     rotate([0,asin((ix-40)/(scal_rad+5))]) translate([0,0,scal_rad+5])flange_screw_co(0,90);
                 }
             }
+        }*/
+        
+        
+        seam_y_opp = (ia==0 ? seam_y_btm : seam_y);
+        
+        translate([-(pack_widh-corn_rad_act),-seam_y_opp,0]) rotate([0,0,180]) flange_screws(corn_rad_act,0,0);
+        if(only_index<7) for(ix=[85,105]) {
+            position_screw_on_scal(ix,seam_y_act+7.5,0,0);
+        }
+        if(only_index>=7) for(ix=[15+15,seam_x_bev0_act-25]) {
+            position_screw_on_scal(ix,seam_y_act+7.5,0,0);
         }
         
         //G - lateral flange screws
-        translate([0,seam_y,0]) rotate([0,0,180]) {
-            for(iy=[25]) {
-                translate([-7.5,iy,-(scal_rad-scal_dep)]) {
-                    translate([0,0,scal_rad+5])flange_screw_co(0,0);
-                }
-            }
-        }
+        position_screw_on_scal(7.5,seam_y_act-40,0,0);
     }
 }
 
-module flange_screws(outer_rot=0,inner_rot=0,screw_a_inset=0) {
+module flange_screws(corn_rad,outer_rot=0,inner_rot=0,screw_a_inset=0) {
     translate([corn_rad-25+screw_a_inset,7.5,5]) flange_screw_co(outer_rot,inner_rot);
     
     translate([corn_rad-5,7.5,(pack_thk-25-7.5)/2]) rotate([0,-90,0]) flange_screw_co(0,0);
@@ -783,25 +983,52 @@ module port_interface_int() {
 }
 
 module torso_stud_cos() {
+    //lower interfaces
     plss_torso_stud_location() {
+        //bolt cutout
         rotate([90,0,0]) hull() cylinder_oh(3+0.2,200);
         
+        //nut cutout
         torso_plss_stud_plane(false) {
-            rotate([90,0,0]) hull() {
-                for(ia=[0,1,2,3,4,5]*60) rotate([0,0,ia]) translate([5/cos(30),0,10+5/cos(45)-5]) rotate([0,0,-ia]) {
+            //bevel
+            translate([0,-10,0]) rotate([90,0,0]) {
+                hull() {
+                    translate([0,0,-0.5]) cylinder_oh(3+0.2,200);
+                    cylinder_oh(3+0.2+0.5,200);
+                }
+            }
+            //nut cutout
+            translate([0,-10,0]) rotate([90,0,0]) {
+                hull() for(ia=[0,1,2,3,4,5]*60) rotate([0,0,ia]) translate([5/cos(30),0,0]) rotate([0,0,-ia]) {
                     translate([0,0,0.2]) cylinder_oh(0.2,200);
                     cylinder_oh(0.01,200);
                 }
             }
+            //bevel
+            translate([0,-10-10,0]) rotate([90,0,0]) {
+                hull() for(ia=[0,1,2,3,4,5]*60) rotate([0,0,ia]) translate([5/cos(30),0,0]) rotate([0,0,-ia]) {
+                    translate([0,0,-0.5]) cylinder_oh(0.2,200);
+                    cylinder_oh(0.2+0.5,200);
+                }
+            }
+            //seat for seal
+            translate([0,-10-10,0]) rotate([90,0,0]) {
+                clr_h = 0.4;
+                hull() {
+                    cylinder_oh(10+clr_h-0.5,200);
+                    translate([0,0,0.5]) cylinder_oh(10+clr_h,200);
+                }
+            }
         }
            
-        hull() for(ib=[0,0.5]) intersection() {
+        *hull() for(ib=[0,0.5]) intersection() {
             rotate([90,0,0]) hull() {
                 for(ia=[0,1,2,3,4,5]*60) rotate([0,0,ia]) translate([5/cos(30),0,0]) rotate([0,0,-ia]) cylinder_oh(0.2+ib,200);
             }
             torso_plss_stud_plane() translate([-100,-200,-100]) cube([200,200-10-5/cos(45)+(0.5-ib),200]);
         }
         
+        //outer bevel
         hull() for(ib=[0,0.5]) difference() {
             rotate([90,0,0]) cylinder_oh(3+0.2+ib,200);
             torso_plss_stud_plane() translate([-100,-200,-100]) cube([200,200-(0.5-ib),200]);
@@ -920,19 +1147,37 @@ module plss_torso_studs() {
     }
 }
 
+module plss_shape_corners() {
+    hull() for(iy=[-1,1]*(pack_hgth-corn_rad)+[-1,0]*(corn_bev-corn_bev_btm)) {
+        corn_bev_act = (iy<0?corn_bev_btm:corn_bev);
+        corn_rad_act = (iy<0?corn_rad_btm:corn_rad);
+        
+        for(ix=[-1,1]*(pack_widh-corn_rad_act)) {
+            for(ib=[0,corn_bev_act]) {
+                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev_act-ib),0]) {
+                    translate([0,0,pack_thk/2]) cylinder(r=corn_rad_act-10-5-10,h=100);
+                }
+            }
+        }
+    }
+}
 
-module plss_shape_pos(inset=0,inset_back=0) hull() {
-    for(ix=[-1,1]*(pack_widh-corn_rad)) {
-        for(iy=[-1,1]*(pack_hgth-corn_rad)+[-1,0]*(corn_bev-corn_bev_btm)) {
-            for(ib=[0,(iy>0?corn_bev:corn_bev_btm)]) {
-                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev-ib),0]) {
+
+module plss_shape_pos(inset=0,inset_back=0) {
+    hull() for(iy=[(pack_hgth-corn_rad),-(pack_hgth-corn_rad_btm)]) {
+        corn_bev_act = (iy<0?corn_bev_btm:corn_bev);
+        corn_rad_act = (iy<0?corn_rad_btm:corn_rad);
+        
+        for(ix=[-1,1]*(pack_widh-corn_bev_act-10)) {
+            for(ib=[0,corn_bev_act]) {
+                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev_act-ib),0]) {
                     ins_adj_1 = (5+inset<0 ? 2.5 : 0);
                     ins_adj_2 = (5+inset<0 ? 2.5*tan(22.5) : 0);
                     
                     rotate_extrude($fn=$fn*2) hull() {
                         $fn=$fn/2;
-                        for(iy=[10+ins_adj_2,pack_thk-10+inset_back-ins_adj_2]) translate([corn_rad-5-ins_adj_1,iy]) circle(r=max(0.01,5+inset));
-                        for(iy=[5+ins_adj_1,pack_thk-5+inset_back-ins_adj_1]) translate([corn_rad-10-ins_adj_2,iy]) circle(r=max(0.01,5+inset));
+                        for(iy=[10+ins_adj_2,pack_thk-10+inset_back-ins_adj_2]) translate([corn_rad_act-5-ins_adj_1,iy]) circle(r=max(0.01,5+inset));
+                        for(iy=[5+ins_adj_1,pack_thk-5+inset_back-ins_adj_1]) translate([corn_rad_act-10-ins_adj_2,iy]) circle(r=max(0.01,5+inset));
                     }
                 }
             }
@@ -942,20 +1187,26 @@ module plss_shape_pos(inset=0,inset_back=0) hull() {
 
 
 module plss_back_co() {
-    hull() for(ix=[-1,1]*(pack_widh-corn_rad)) {
-        for(iy=[-1,1]*(pack_hgth-corn_rad)+[-1,0]*(corn_bev-corn_bev_btm)) {
-            for(ib=[0,(iy>0?corn_bev:corn_bev_btm)]) {
-                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev-ib),0]) {
-                    translate([0,0,pack_thk/2]) cylinder(r=corn_rad-10-5-10,h=100);
+    hull() for(iy=[-1,1]*(pack_hgth-corn_rad)+[-1,0]*(corn_bev-corn_bev_btm)) {
+        corn_bev_act = (iy<0?corn_bev_btm:corn_bev);
+        corn_rad_act = (iy<0?corn_rad_btm:corn_rad);
+        
+        for(ix=[-1,1]*(pack_widh-corn_rad_act)) {
+            for(ib=[0,corn_bev_act]) {
+                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev_act-ib),0]) {
+                    translate([0,0,pack_thk/2]) cylinder(r=corn_rad_act-10-5-10,h=100);
                 }
             }
         }
     }
-    hull() for(ix=[-1,1]*(pack_widh-corn_rad)) {
-        for(iy=[-1,1]*(pack_hgth-corn_rad)+[-1,0]*(corn_bev-corn_bev_btm)) {
-            for(ib=[0,(iy>0?corn_bev:corn_bev_btm)]) {
-                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev-ib),0]) {
-                    translate([0,0,pack_thk-5]) cylinder(r=corn_rad-10-5,h=100);
+    hull() for(iy=[-1,1]*(pack_hgth-corn_rad)+[-1,0]*(corn_bev-corn_bev_btm)) {
+        corn_bev_act = (iy<0?corn_bev_btm:corn_bev);
+        corn_rad_act = (iy<0?corn_rad_btm:corn_rad);
+        
+        for(ix=[-1,1]*(pack_widh-corn_rad_act)) {
+            for(ib=[0,corn_bev_act]) {
+                translate([ix-sign(ix)*ib,iy-sign(iy)*(corn_bev_act-ib),0]) {
+                    translate([0,0,pack_thk-5]) cylinder(r=corn_rad_act-10-5,h=100);
                 }
             }
         }
