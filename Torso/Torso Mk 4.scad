@@ -1,6 +1,6 @@
 
-use <PLSS Torso Shared Modules.scad>;
-use <Neckring Torso Shared Modules.scad>;
+use <../Shared/PLSS Torso Shared Modules.scad>;
+use <../Shared/Neckring Torso Shared Modules.scad>;
 
 
 $fn = 72;
@@ -52,6 +52,9 @@ torso_assmbly() translate([-500,-500,-500]) cube([1000,1000,1000]);
 *lateral_joining_tab_c();
 *lateral_joining_tab_d();
 *translate([0,0,-8*cos(should_ang)]) interface_plate();
+
+use <../Neck Ring Interface/Neckring Interface.scad>;
+neckring_interface() translate([-200,-200,-200]) cube([400,400,400]);
 
 module torso_assmbly() difference() {
     intersection() {

@@ -1,5 +1,5 @@
 
-use <PLSS Torso Shared Modules.scad>;
+use <../PLSS Torso Shared Modules.scad>;
 //use <PLSS.scad>;
 
 $fn = 36;

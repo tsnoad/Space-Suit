@@ -93,7 +93,7 @@ module neck_space_mag_co(only_index=undef,rot_radial=false) {
     }
 }
 
-module neck_space_mag_screw_co(ia) {
+module neck_space_mag_screw_co(ia=0) {
     translate([0,0,-50]) rotate([0,0,90]) hull() cylinder_oh(1.5+0.15,50+10);
     translate([0,0,-5-50]) rotate([0,0,90]) hull() cylinder_oh(3,50);
     

@@ -3,7 +3,7 @@
 $fn = 144;
 
 
-use <PLSS Torso Shared Modules.scad>;
+use <../Shared/PLSS Torso Shared Modules.scad>;
 
 
 //Oring seal parameters

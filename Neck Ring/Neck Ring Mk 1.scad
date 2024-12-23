@@ -8,7 +8,7 @@
 
 $fn = 144;
 
-include <../Torso/Neckring Torso Shared Modules.scad>;
+include <../Shared/Neckring Torso Shared Modules.scad>;
 
 include <Neck Ring Mk 1 Include.scad>;
 

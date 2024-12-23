@@ -1,7 +1,7 @@
 $fn = 72;
 
-use <PLSS Torso Shared Modules.scad>;
-use <Neckring Torso Shared Modules.scad>;
+use <../Shared/PLSS Torso Shared Modules.scad>;
+use <../Shared/Neckring Torso Shared Modules.scad>;
 
 include <../Neck Ring/Neck Ring Mk 1 Include.scad>;
 
@@ -27,6 +27,12 @@ translate([0,0,7.5]) {
     rotate([-15,0,0]) translate([0,40,0]) {
         trans_aircon_boss() translate([0,0,120+5+2.5]) {
             aircon_block();
+            translate([0,0,18/2]) rotate([0,90,0]) {
+                cylinder(r=6.5,h=40);
+                translate([0,0,31]) cylinder(r=13,h=20);
+                translate([0,0,31]) cylinder(r=10.4,h=47);
+                translate([0,0,31]) cylinder(r=4.5,h=74);
+            }
         }
     }
 }
