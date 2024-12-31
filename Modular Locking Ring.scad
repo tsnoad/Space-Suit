@@ -277,7 +277,7 @@ module locking_ring_top() union() {
             if(latch) latch_pos() locking_ring_latch_prot(hgt1,bev_xs,bev_l);
         }
             
-        rotate([0,0,limtab_a_trav/2]) intersection() {
+        /*rotate([0,0,limtab_a_trav/2]) */intersection() {
             union() {
                 translate([0,0,-1]) linear_extrude(height=10,convexity=10) {
                     for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
@@ -326,7 +326,7 @@ module locking_ring_top() union() {
         }*/
     }
     
-    rotate([0,0,limtab_a_trav/2]) for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
+    /*rotate([0,0,limtab_a_trav/2]) */for(i=[0:lug_num-1]) rotate([0,0,(i)*360/lug_num]) {
         for(j=[0,1]) mirror([j,0,0]) rotate([0,0,360/lug_num/2]) {
             hull() for(i=[sqrt(pow(r_inner-clr_h+crn_r,2)-pow(lug_widh+crn_r,2)),sqrt(pow(r_intrm-clr_h-crn_r,2)-pow(lug_widh+crn_r,2))]) translate([lug_widh+crn_r,i,0]) {
                 

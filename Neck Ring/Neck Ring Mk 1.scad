@@ -28,16 +28,30 @@ include <Neck Ring Mk 1 Include.scad>;
 */* make 'Neck Ring Mk 1 E.stl' */ neck_base_ring_top() int_neck_base_ring_top([0]);
 */* make 'Neck Ring Mk 1 F.stl' */ neck_base_ring_top() int_neck_base_ring_top([1]);
 */* make 'Neck Ring Mk 1 G.stl' */ neck_base_ring_top() int_neck_base_ring_top([2]);
-!/* make 'Neck Ring Mk 1 H.stl' */ neck_base_ring_top() int_neck_base_ring_top([3]);
+*/* make 'Neck Ring Mk 1 H.stl' */ neck_base_ring_top() int_neck_base_ring_top([3]);
+
+*/* make 'Neck Ring Mk 1 I.stl' */ rotate([0,0,limtab_a_trav*1]) neck_locking_ring_bottom() int_neck_lockring_ring_bottom([0]);
+*/* make 'Neck Ring Mk 1 J.stl' */ rotate([0,0,limtab_a_trav*1]) neck_locking_ring_bottom() int_neck_lockring_ring_bottom([1]);
+*/* make 'Neck Ring Mk 1 K.stl' */ rotate([0,0,limtab_a_trav*1]) neck_locking_ring_bottom() int_neck_lockring_ring_bottom([2]);
+
+*/* make 'Neck Ring Mk 1 L.stl' */ rotate([0,0,limtab_a_trav*1]) neck_locking_ring_top() int_neck_lockring_ring_top([0]);
+*/* make 'Neck Ring Mk 1 M.stl' */ rotate([0,0,limtab_a_trav*1]) neck_locking_ring_top() int_neck_lockring_ring_top([1]);
+*/* make 'Neck Ring Mk 1 N.stl' */ rotate([0,0,limtab_a_trav*1]) neck_locking_ring_top() int_neck_lockring_ring_top([2]);
+
+
+
+*/* make 'Neck Ring Mk 1 O.stl' */ latch();
+
+
 
 //assembled view
-neck_base_ring_bottom() int_neck_base_ring_bottom([2]);
-
-translate([0,0,bring_btm_hgt+lring_btm_hgt]) neck_base_ring_top() int_neck_base_ring_top([2]);
-
+neck_base_ring_bottom() int_neck_base_ring_bottom([0,1,2,3]);
+translate([0,0,bring_btm_hgt+lring_btm_hgt]) neck_base_ring_top() int_neck_base_ring_top([0,1,2,3]);
+*translate([0,0,30]) rotate([0,0,limtab_a_trav*1]) neck_locking_ring_top() int_neck_lockring_ring_top([0,1,2]);
+*rotate([0,0,limtab_a_trav*1]) neck_locking_ring_bottom() int_neck_lockring_ring_bottom([0,1,2]);
 *latch();
 
-*translate([0,0,bring_btm_hgt]) !rotate([0,0,limtab_a_trav*1]) neck_locking_ring_bottom() {
+/**translate([0,0,bring_btm_hgt]) rotate([0,0,limtab_a_trav*1]) neck_locking_ring_bottom() {
     for(ia=[120]) rotate([0,0,ia+limtab_a_trav]) union() {
         rotate([0,0,-15]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
         rotate([0,0,+15]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
@@ -46,17 +60,17 @@ translate([0,0,bring_btm_hgt+lring_btm_hgt]) neck_base_ring_top() int_neck_base_
 
 *translate([0,0,20+bring_btm_hgt+lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v]) rotate([0,0,limtab_a_trav*1]) neck_locking_ring_top() {
     union() {
-        *rotate([0,0,45]) {
+        rotate([0,0,45]) {
             translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
             rotate([0,0,45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
         }
-        *rotate([0,0,45+90+45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+        rotate([0,0,45+90+45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
         rotate([0,0,45]) mirror([0,1,0]) {
             translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
             rotate([0,0,45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
         }
     }
-}
+}*/
 
 module base_ring_bottom_duct(hgt1,hgt2) {
     rv = 2.5; //minor radius (how thick is the vent)
@@ -219,12 +233,12 @@ module neck_base_ring_top() intersection() {
 }
 
 module neck_locking_ring_bottom() intersection() {
-    locking_ring_bottom() {
+    locking_ring_bottom() rotate([0,0,-limtab_a_trav]) {
         hgt1 = lring_btm_hgt-clr_v;
         hgt2 = lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v;
 
-        rotate([0,0,-limtab_a_trav]) for(ixm=[0,1]) mirror([ixm,0,0]) {
-            for(ia2=[0:lug_num/2-1]) rotate([0,0,(ia2+0.5)*360/lug_num]) {
+        for(ixm=[0,1]) mirror([ixm,0,0]) {
+            #for(ia2=[0:lug_num/2-1]) rotate([0,0,(ia2+0.5)*360/lug_num]) {
                 for(ia=(ia2==1?[10]:[-10,10])*10) rotate([0,0,ia]) {
                     translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
                         cylinder_neg_bev(1.5+0.15,hgt2,(3-(1.5+0.15)),0);
@@ -234,13 +248,48 @@ module neck_locking_ring_bottom() intersection() {
                 }
             }
         }
+        
+        //additionally, use filament pins to ensure the ring top is aligned - screws might not be sufficient
+        pin_r = 1.75/2+0.2; //use short lengths of filament as dowel pins
+        pin_loc_r = lug_outer_r+clr_h+(lring_outer_r-(lug_outer_r+clr_h))/2;
+        pin_dep = [lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v-1.4,lring_top_hgt-1.4];
+            
+        for(ia=[0,60,180-45,180,180+45,360-60]) for(ia2=(ia!=60&&ia!=360-60?[-1,1]:[1]*sign(180-ia))*asin((pin_r+2.4+clr_h_s)/pin_loc_r)) rotate([0,0,ia+ia2]) translate([0,pin_loc_r,hgt2]) {
+            translate([0,0,-pin_dep[0]]) hull() {
+                cylinder(r=pin_r-0.5,h=pin_dep[0]+pin_dep[1]);
+                translate([0,0,0.5]) cylinder(r=pin_r,h=pin_dep[0]+pin_dep[1]-2*0.5);
+            }
+            hull() {
+                translate([0,0,-bev_s]) cylinder(r=pin_r,h=2*bev_s);
+                cylinder(r=pin_r+bev_s,h=0.01);
+            }
+        }
+        
+        for(ia=[4,5,7,9,11,12]*(360/lug_num/2)) rotate([0,0,ia]) translate([0,pin_loc_r,hgt2]) {
+            translate([0,0,-pin_dep[0]]) hull() {
+                cylinder(r=pin_r-0.5,h=pin_dep[0]+pin_dep[1]);
+                translate([0,0,0.5]) cylinder(r=pin_r,h=pin_dep[0]+pin_dep[1]-2*0.5);
+            }
+            hull() {
+                translate([0,0,-bev_s]) cylinder(r=pin_r,h=2*bev_s);
+                cylinder(r=pin_r+bev_s,h=0.01);
+            }
+        }
     }
     children();
 }
 
+module int_neck_lockring_ring_bottom(int_segment_index=[0:2]) {
+    for(ia=int_segment_index*120) rotate([0,0,ia+limtab_a_trav]) union() {
+        rotate([0,0,-15]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+        rotate([0,0,+15]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+    }
+}
+
 module neck_locking_ring_top() intersection() {
-    locking_ring_top() {
-        rotate([0,0,-limtab_a_trav]) for(ixm=[0,1]) mirror([ixm,0,0]) {
+    locking_ring_top() rotate([0,0,-limtab_a_trav]) {
+        for(ixm=[0,1]) mirror([ixm,0,0]) {
+            //engagment - screws joining lockring_bottom to lockring_top
             for(ia2=[0:lug_num/2-1]) rotate([0,0,(ia2+0.5)*360/lug_num]) {
                 for(ia=(ia2==1?[10]:[-10,10])*10) rotate([0,0,ia]) {
                     translate([0,lug_outer_r+clr_h+(1.5+0.15),0]) {
@@ -250,6 +299,49 @@ module neck_locking_ring_top() intersection() {
                 }
             }
         }
+        
+        //additionally, use filament pins to ensure the ring top is aligned - screws might not be sufficient
+        pin_r = 1.75/2+0.2; //use short lengths of filament as dowel pins
+        pin_loc_r = lug_outer_r+clr_h+(lring_outer_r-(lug_outer_r+clr_h))/2;
+        pin_dep = [lring_btm_hgt+bring_top_hgt+lug_hgt+clr_v-1.4,lring_top_hgt-1.4];
+            
+        for(ia=[0,60,180-45,180,180+45,360-60]) for(ia2=(ia!=60&&ia!=360-60?[-1,1]:[1]*sign(180-ia))*asin((pin_r+2.4+clr_h_s)/pin_loc_r)) rotate([0,0,ia+ia2]) translate([0,pin_loc_r,0]) {
+            translate([0,0,-pin_dep[0]]) hull() {
+                cylinder(r=pin_r-0.5,h=pin_dep[0]+pin_dep[1]);
+                translate([0,0,0.5]) cylinder(r=pin_r,h=pin_dep[0]+pin_dep[1]-2*0.5);
+            }
+            hull() {
+                translate([0,0,-bev_s]) cylinder(r=pin_r,h=2*bev_s);
+                cylinder(r=pin_r+bev_s,h=0.01);
+            }
+        }
+        
+        for(ia=[4,5,7,9,11,12]*(360/lug_num/2)) rotate([0,0,ia]) translate([0,pin_loc_r,0]) {
+            translate([0,0,-pin_dep[0]]) hull() {
+                cylinder(r=pin_r-0.5,h=pin_dep[0]+pin_dep[1]);
+                translate([0,0,0.5]) cylinder(r=pin_r,h=pin_dep[0]+pin_dep[1]-2*0.5);
+            }
+            hull() {
+                translate([0,0,-bev_s]) cylinder(r=pin_r,h=2*bev_s);
+                cylinder(r=pin_r+bev_s,h=0.01);
+            }
+        }
+    }
+    children();
+}
+
+
+module int_neck_lockring_ring_top(int_segment_index=[0:2]) rotate([0,0,limtab_a_trav]) {
+    if(search(0,int_segment_index)) rotate([0,0,45]) {
+        translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+        rotate([0,0,45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+    }
+    
+    if(search(1,int_segment_index)) rotate([0,0,45+90+45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+    
+    if(search(2,int_segment_index)) rotate([0,0,45]) mirror([0,1,0]) {
+        translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
+        rotate([0,0,45]) translate([clr_h_s/2,clr_h_s/2,0]) cube([200,200,100]);
     }
 }
 
