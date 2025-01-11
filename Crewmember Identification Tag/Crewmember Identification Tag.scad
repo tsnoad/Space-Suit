@@ -45,9 +45,18 @@ tag_h2 = tag_h1+0.4; //height of square
 tag_h3 = tag_h2+0.4; //height of letter
 
 /* Set up parts for export using the makefile */
-*/* make 'Crewmember Identification Tag A' */ for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) tag_circle();
-*/* make 'Crewmember Identification Tag B' */ for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) tag_square();
-!/* make 'Crewmember Identification Tag C' */ for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) tag_letter();
+*/* make 'Crewmember Identification Tag A' */ union() {
+    for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) tag_circle();
+    rotate_extrude(angle=90+15) translate([35,0]) square([1.6,tag_h1]);
+}
+*/* make 'Crewmember Identification Tag B' */ union() {
+    for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) tag_square();
+    rotate_extrude(angle=90+15) translate([35,tag_h1]) square([1.6,tag_h2-tag_h1]);
+}
+!/* make 'Crewmember Identification Tag C' */ union() {
+    for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) tag_letter();
+    rotate_extrude(angle=90+15) translate([35,tag_h2]) square([1.6,tag_h3-tag_h2]);
+}
 
 //assembled view
 for(ix=[-1,1]*(tag_r+1.5)) translate([ix,0,0]) {
